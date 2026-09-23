@@ -1,0 +1,425 @@
+﻿<UserControl x:Class="Mercurio.Views.AuthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#0A0A0A">
+
+    <UserControl.Resources>
+
+        <!-- ============================================================
+             COLORES — monocromo, un solo acento (blanco), sin ruido
+             ============================================================ -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="SurfaceBrush"    Color="#111111"/>
+        <SolidColorBrush x:Key="BorderBrush2"    Color="#262626"/>
+        <SolidColorBrush x:Key="BorderStrong"    Color="#3A3A3A"/>
+        <SolidColorBrush x:Key="TextBrush"       Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="LabelBrush"      Color="#A3A3A3"/>
+        <SolidColorBrush x:Key="MutedBrush"      Color="#737373"/>
+        <SolidColorBrush x:Key="InputBrush"      Color="#0F0F0F"/>
+        <SolidColorBrush x:Key="AccentBrush"     Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="AccentHover"     Color="#E5E5E5"/>
+        <SolidColorBrush x:Key="AccentPress"     Color="#D4D4D4"/>
+
+        <!-- Mensajes de estado -->
+        <SolidColorBrush x:Key="DangerText"   Color="#F87171"/>
+        <SolidColorBrush x:Key="DangerBg"     Color="#241212"/>
+        <SolidColorBrush x:Key="DangerBorder" Color="#4C1D1D"/>
+
+        <SolidColorBrush x:Key="SuccessText"   Color="#34D399"/>
+        <SolidColorBrush x:Key="SuccessBg"     Color="#0F211B"/>
+        <SolidColorBrush x:Key="SuccessBorder" Color="#14532D"/>
+
+        <!-- ============================================================
+             TEXTBOX — borde plano, foco sutil con acento blanco
+             ============================================================ -->
+        <Style x:Key="InputStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Background" Value="{StaticResource InputBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============================================================
+             PASSWORDBOX — mismo tratamiento que TextBox
+             ============================================================ -->
+        <Style x:Key="PasswordStyle" TargetType="PasswordBox">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Background" Value="{StaticResource InputBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============================================================
+             BOTÓN PRIMARIO — blanco plano, hover/press sutil
+             ============================================================ -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="#0A0A0A"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentPress}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BorderStrong}"/>
+                                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============================================================
+             BOTÓN DE ENLACE (Create one / Sign in)
+             ============================================================ -->
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="Txt" Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   FontWeight="{TemplateBinding FontWeight}"
+                                   TextDecorations="Underline"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Txt" Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============================================================
+             MENSAJE DE ESTADO — reutilizable para error/éxito
+             (visibilidad y texto se controlan desde code-behind)
+             ============================================================ -->
+        <Style x:Key="MessageLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+        </Style>
+
+    </UserControl.Resources>
+
+
+    <Grid Background="{StaticResource BackgroundBrush}">
+
+        <!-- Fondo sutil: un solo resplandor difuso, sin texturas -->
+        <Ellipse Width="520" Height="520"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Margin="0,0,0,260" Opacity="0.05" Fill="White">
+            <Ellipse.Effect>
+                <BlurEffect Radius="120"/>
+            </Ellipse.Effect>
+        </Ellipse>
+
+
+        <!-- AUTH CONTAINER -->
+        <Border Width="420"
+                Padding="42"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush2}"
+                BorderThickness="1"
+                CornerRadius="16">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="10" Opacity="0.4"/>
+            </Border.Effect>
+
+            <Grid ClipToBounds="True">
+
+                <!-- ====================================================
+                     LOGIN
+                     Se conservan x:Name="LoginPanel" y "LoginTransform":
+                     el code-behind sigue animando esta transición igual.
+                     ==================================================== -->
+                <Grid x:Name="LoginPanel">
+
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="LoginTransform" X="0"/>
+                    </Grid.RenderTransform>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- 0: brand -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 1: username -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 2: password -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 3: mensaje -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 4: sign in -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 5: divider -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 6: signup link -->
+                    </Grid.RowDefinitions>
+
+
+                    <!-- Brand -->
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                        <TextBlock Text="Mercurio" FontSize="24" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Welcome back" Margin="0,6,0,0" FontSize="13.5"
+                                   Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+
+                    <!-- Username -->
+                    <StackPanel Grid.Row="1" Margin="0,32,0,0">
+                        <TextBlock Text="Username" Margin="0,0,0,8" FontSize="12.5"
+                                   Foreground="{StaticResource LabelBrush}"/>
+                        <TextBox x:Name="txtLoginUsername" Style="{StaticResource InputStyle}"/>
+                    </StackPanel>
+
+
+                    <!-- Password -->
+                    <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                        <TextBlock Text="Password" Margin="0,0,0,8" FontSize="12.5"
+                                   Foreground="{StaticResource LabelBrush}"/>
+                        <PasswordBox x:Name="txtLoginPassword" Style="{StaticResource PasswordStyle}"
+                                     KeyDown="txtLoginPassword_KeyDown"/>
+                    </StackPanel>
+
+
+                    <!-- Mensaje de estado (oculto por defecto) -->
+                    <Border x:Name="pnlMensajeLogin"
+                            Grid.Row="3"
+                            Margin="0,14,0,0"
+                            Padding="12,10"
+                            CornerRadius="8"
+                            BorderThickness="1"
+                            Background="{StaticResource DangerBg}"
+                            BorderBrush="{StaticResource DangerBorder}"
+                            Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="M12,2 A10,10 0 1,1 2,12 A10,10 0 0,1 12,2 M12,6 L12,13 M12,16 L12.01,16"
+                                  Stroke="{StaticResource DangerText}" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblMensajeLogin" Style="{StaticResource MessageLabel}"
+                                       Foreground="{StaticResource DangerText}"/>
+                        </StackPanel>
+                    </Border>
+
+
+                    <!-- Sign in -->
+                    <Button x:Name="btnLogin" Grid.Row="4" Margin="0,20,0,0"
+                            Content="Sign in" Style="{StaticResource PrimaryButtonStyle}"
+                            Click="SignIn_Click"/>
+
+
+                    <!-- Divider -->
+                    <Grid Grid.Row="5" Margin="0,26,0,20">
+                        <Rectangle Height="1" VerticalAlignment="Center" Fill="{StaticResource BorderBrush2}"/>
+                    </Grid>
+
+
+                    <!-- Signup -->
+                    <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Don't have an account?" FontSize="13"
+                                   Foreground="{StaticResource MutedBrush}"/>
+                        <Button Content="Create one" Margin="6,0,0,0"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Click="ShowSignup_Click"/>
+                    </StackPanel>
+
+                </Grid>
+
+
+                <!-- ====================================================
+                     SIGNUP
+                     Se conservan x:Name="SignupPanel" y "SignupTransform"
+                     con el mismo desplazamiento inicial (X=20) para que
+                     la animación de entrada/salida siga funcionando igual.
+                     ==================================================== -->
+                <Grid x:Name="SignupPanel" Visibility="Collapsed">
+
+                    <Grid.RenderTransform>
+                        <TranslateTransform x:Name="SignupTransform" X="20"/>
+                    </Grid.RenderTransform>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- 0: brand -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 1: display name -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 2: username -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 3: password -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 4: mensaje -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 5: create -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 6: divider -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- 7: login link -->
+                    </Grid.RowDefinitions>
+
+
+                    <!-- Brand -->
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                        <TextBlock Text="Mercurio" FontSize="24" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Create your account" Margin="0,6,0,0" FontSize="13.5"
+                                   Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+
+                    <!-- Display name -->
+                    <StackPanel Grid.Row="1" Margin="0,28,0,0">
+                        <TextBlock Text="Display name" Margin="0,0,0,8" FontSize="12.5"
+                                   Foreground="{StaticResource LabelBrush}"/>
+                        <TextBox x:Name="txtSignupDisplayName" Style="{StaticResource InputStyle}"/>
+                    </StackPanel>
+
+
+                    <!-- Username -->
+                    <StackPanel Grid.Row="2" Margin="0,14,0,0">
+                        <TextBlock Text="Username" Margin="0,0,0,8" FontSize="12.5"
+                                   Foreground="{StaticResource LabelBrush}"/>
+                        <TextBox x:Name="txtSignupUsername" Style="{StaticResource InputStyle}"/>
+                    </StackPanel>
+
+
+                    <!-- Password -->
+                    <StackPanel Grid.Row="3" Margin="0,14,0,0">
+                        <TextBlock Text="Password" Margin="0,0,0,8" FontSize="12.5"
+                                   Foreground="{StaticResource LabelBrush}"/>
+                        <PasswordBox x:Name="txtSignupPassword" Style="{StaticResource PasswordStyle}"/>
+                    </StackPanel>
+
+
+                    <!-- Mensaje de estado (oculto por defecto; sirve para error o éxito) -->
+                    <Border x:Name="pnlMensajeSignup"
+                            Grid.Row="4"
+                            Margin="0,14,0,0"
+                            Padding="12,10"
+                            CornerRadius="8"
+                            BorderThickness="1"
+                            Background="{StaticResource DangerBg}"
+                            BorderBrush="{StaticResource DangerBorder}"
+                            Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <Path x:Name="iconMensajeSignup"
+                                  Data="M12,2 A10,10 0 1,1 2,12 A10,10 0 0,1 12,2 M12,6 L12,13 M12,16 L12.01,16"
+                                  Stroke="{StaticResource DangerText}" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="lblMensajeSignup" Style="{StaticResource MessageLabel}"
+                                       Foreground="{StaticResource DangerText}"/>
+                        </StackPanel>
+                    </Border>
+
+
+                    <!-- Create -->
+                    <Button x:Name="btnSignup" Grid.Row="5" Margin="0,18,0,0"
+                            Content="Create account" Style="{StaticResource PrimaryButtonStyle}"
+                            Click="CreateAccount_Click"/>
+
+
+                    <!-- Divider -->
+                    <Grid Grid.Row="6" Margin="0,24,0,18">
+                        <Rectangle Height="1" VerticalAlignment="Center" Fill="{StaticResource BorderBrush2}"/>
+                    </Grid>
+
+
+                    <!-- Login -->
+                    <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="Already have an account?" FontSize="13"
+                                   Foreground="{StaticResource MutedBrush}"/>
+                        <Button Content="Sign in" Margin="6,0,0,0"
+                                Style="{StaticResource LinkButtonStyle}"
+                                Click="ShowLogin_Click"/>
+                    </StackPanel>
+
+                </Grid>
+
+            </Grid>
+
+        </Border>
+
+    </Grid>
+
+</UserControl>

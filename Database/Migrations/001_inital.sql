@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS schema_migrations(
+	version INTEGER PRIMARY KEY,
+	name TEXT NOT NULL,
+	applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE IF NOT EXISTS users
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS settings
+(
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
