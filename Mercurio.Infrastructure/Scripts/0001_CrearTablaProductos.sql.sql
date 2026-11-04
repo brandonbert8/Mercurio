@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS Productos (
+    Id TEXT PRIMARY KEY,
+    CodigoBarras TEXT NOT NULL UNIQUE,
+    Nombre TEXT NOT NULL,
+    PrecioCompra REAL NOT NULL,
+    PrecioVenta REAL NOT NULL,
+    StockActual INTEGER NOT NULL DEFAULT 0,
+    Activo INTEGER NOT NULL DEFAULT 1
+);

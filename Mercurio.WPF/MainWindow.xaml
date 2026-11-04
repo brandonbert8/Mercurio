@@ -1,0 +1,51 @@
+﻿<Window Background="#0A0A0A" 
+        Foreground="#EDEDED" 
+        Height="450" 
+        Title="Mercurio POS" 
+        Width="800" 
+        x:Class="Mercurio.WPF.MainWindow" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- El DataContext se inyecta desde App.xaml.cs -->
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,20" Orientation="Horizontal">
+            <TextBox Background="#1A1A1A" BorderBrush="#333" Foreground="White" Margin="0,0,10,0" Padding="5" Text="{Binding NuevoNombre, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+
+            <TextBox Background="#1A1A1A" BorderBrush="#333" Foreground="White" Margin="0,0,10,0" Padding="5" Text="{Binding NuevoPrecio, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+
+            <Button Background="#0070F3" BorderThickness="0" Command="{Binding GuardarProductoCommand}" Content="Agregar" Foreground="White" Padding="5" Width="100"/>
+
+            <Button Background="#333" BorderThickness="0" Command="{Binding CargarProductosCommand}" Content="Refrescar" Foreground="White" Margin="10,0,0,0" Padding="5" Width="100"/>
+        </StackPanel>
+
+        <!-- Se cambió Foreground a White y se mejoraron los bordes de la grilla -->
+        <DataGrid AutoGenerateColumns="True" 
+                  Background="#111111" 
+                  Foreground="White" 
+                  Grid.Row="1" 
+                  HeadersVisibility="Column" 
+                  ItemsSource="{Binding Productos}" 
+                  RowBackground="#1A1A1A"
+                  BorderBrush="#333"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#222">
+
+            <!-- Estilo para asegurar que las cabeceras de las columnas coincidan con el tema oscuro -->
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#1A1A1A"/>
+                    <Setter Property="Foreground" Value="#888888"/>
+                    <Setter Property="Padding" Value="10,5"/>
+                    <Setter Property="BorderBrush" Value="#333"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+        </DataGrid>
+    </Grid>
+</Window>

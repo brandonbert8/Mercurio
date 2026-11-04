@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Mercurio.csproj" />
+  <Project Path="Mercurio.Application/Mercurio.Application.csproj" />
+  <Project Path="Mercurio.Domain/Mercurio.Domain.csproj" />
+  <Project Path="Mercurio.Infrastructure/Mercurio.Infrastructure.csproj" />
+  <Project Path="Mercurio.WPF/Mercurio.WPF.csproj" />
 </Solution>
