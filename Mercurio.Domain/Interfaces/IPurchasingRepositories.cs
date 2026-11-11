@@ -1,4 +1,5 @@
 using Mercurio.Domain.Entities;
+using Mercurio.Domain.Enums;
 
 namespace Mercurio.Domain.Interfaces
 {
@@ -17,8 +18,8 @@ namespace Mercurio.Domain.Interfaces
         Task<Compra?> GetByIdAsync(string id);
         Task<IEnumerable<Compra>> GetByRangoAsync(string sucursalId, DateTime desde, DateTime hasta);
         Task<IEnumerable<CompraDetalle>> GetDetallesAsync(string compraId);
-        Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles);
+        Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta);
         Task AnularAsync(string compraId);
-        Task<string> GenerarNumeroAsync(string sucursalId, DateTime fecha);
+        Task<string> GenerarNumeroAsync(string sucursalId, TipoDocumento tipoDocumento, DateTime fecha);
     }
 }

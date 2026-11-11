@@ -20,6 +20,7 @@ namespace Mercurio.Domain.Entities
         public string ProductoId { get; set; } = string.Empty;
         public int Cantidad { get; set; }
         public int StockMinimo { get; set; }
+        public decimal CostoPromedio { get; set; }
         public DateTime FechaActualizacion { get; set; } = DateTime.Now;
     }
 

@@ -37,4 +37,15 @@ namespace Mercurio.Domain.Entities
         public string? UsuarioId { get; set; }
         public string Referencia { get; set; } = string.Empty;
     }
+
+    public class CajaCierreCalculo
+    {
+        public CajaSesion Sesion { get; set; } = new();
+        public decimal VentasEfectivo { get; set; }
+        public decimal CobrosEfectivo { get; set; }
+        public decimal Ingresos { get; set; }
+        public decimal Egresos { get; set; }
+        public decimal MontoEsperado { get; set; }
+        public decimal Diferencia { get; set; }
+    }
 }

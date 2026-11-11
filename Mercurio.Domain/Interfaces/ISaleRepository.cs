@@ -1,4 +1,5 @@
 using Mercurio.Domain.Entities;
+using Mercurio.Domain.Enums;
 
 namespace Mercurio.Domain.Interfaces
 {
@@ -9,7 +10,7 @@ namespace Mercurio.Domain.Interfaces
         Task<IEnumerable<VentaDetalle>> GetDetallesAsync(string ventaId);
         Task CrearAsync(Venta venta, IEnumerable<VentaDetalle> detalles, Pago? pago, CuentaPorCobrar? cuenta);
         Task AnularAsync(string ventaId, string usuarioId, string motivo);
-        Task<string> GenerarNumeroAsync(string sucursalId, DateTime fecha);
+        Task<string> GenerarNumeroAsync(string sucursalId, TipoDocumento tipoDocumento, DateTime fecha);
     }
 
     public interface IPagoRepository

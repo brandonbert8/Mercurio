@@ -13,7 +13,9 @@ namespace Mercurio.Domain.Interfaces
         Task<CajaSesion?> GetSesionAbiertaAsync(string cajaId);
         Task<IEnumerable<CajaSesion>> GetSesionesAsync(string sucursalId, DateTime desde, DateTime hasta);
         Task InsertarSesionAsync(CajaSesion sesion);
+        Task InsertarSesionConAperturaAsync(CajaSesion sesion, CajaMovimiento apertura);
         Task ActualizarSesionAsync(CajaSesion sesion);
+        Task<CajaCierreCalculo> CerrarSesionAsync(string cajaSesionId, decimal montoDeclarado, string observacion);
 
         Task InsertarMovimientoAsync(CajaMovimiento movimiento);
         Task<IEnumerable<CajaMovimiento>> GetMovimientosAsync(string cajaSesionId);

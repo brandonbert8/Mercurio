@@ -22,7 +22,8 @@ namespace Mercurio.Domain.Interfaces
         Task<IEnumerable<AbonoCobro>> GetAbonosAsync(string cuentaId);
         Task<decimal> GetSaldoClienteAsync(string clienteId);
         Task CrearAsync(CuentaPorCobrar cuenta);
-        Task RegistrarAbonoAsync(AbonoCobro abono, decimal nuevoSaldo, int estado);
+        Task RegistrarAbonoAsync(AbonoCobro abono, decimal saldoAnterior, decimal nuevoSaldo, int estado, CajaMovimiento? movimientoCaja = null);
+        Task<bool> TieneAbonosPorVentaAsync(string ventaId);
         Task ActualizarEstadoAsync(string cuentaId, int estado);
         Task AnularPorVentaAsync(string ventaId);
     }

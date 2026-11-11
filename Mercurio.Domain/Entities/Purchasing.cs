@@ -47,4 +47,31 @@ namespace Mercurio.Domain.Entities
         public decimal ImpuestoPorcentaje { get; set; }
         public decimal SubTotal { get; set; }
     }
+
+    public class CuentaPorPagar
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string CompraId { get; set; } = string.Empty;
+        public string ProveedorId { get; set; } = string.Empty;
+        public DateTime FechaEmision { get; set; } = DateTime.Now;
+        public DateTime FechaVencimiento { get; set; }
+        public decimal MontoOriginal { get; set; }
+        public decimal Saldo { get; set; }
+        public EstadoCuentaPagar Estado { get; set; } = EstadoCuentaPagar.Pendiente;
+        public string Observacion { get; set; } = string.Empty;
+    }
+
+    public class AbonoPago
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string CuentaPorPagarId { get; set; } = string.Empty;
+        public string ProveedorId { get; set; } = string.Empty;
+        public DateTime Fecha { get; set; } = DateTime.Now;
+        public decimal Monto { get; set; }
+        public MetodoPago MetodoPago { get; set; } = MetodoPago.Efectivo;
+        public string Referencia { get; set; } = string.Empty;
+        public string? UsuarioId { get; set; }
+        public string? CajaSesionId { get; set; }
+        public string Observacion { get; set; } = string.Empty;
+    }
 }

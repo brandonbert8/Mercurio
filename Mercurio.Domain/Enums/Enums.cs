@@ -66,6 +66,14 @@ namespace Mercurio.Domain.Enums
         Cerrada = 2
     }
 
+    public enum EstadoCuentaPagar
+    {
+        Pendiente = 1,
+        Parcial = 2,
+        Pagada = 3,
+        Anulada = 4
+    }
+
     public enum TipoMovimientoCaja
     {
         Apertura = 1,
