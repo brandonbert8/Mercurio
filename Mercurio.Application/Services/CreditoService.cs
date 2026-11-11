@@ -10,12 +10,10 @@ namespace Mercurio.Application.Services
     public class CreditoService : ICreditoService
     {
         private readonly ICreditoRepository _creditoRepository;
-        private readonly ICashRepository _cashRepository;
 
-        public CreditoService(ICreditoRepository creditoRepository, ICashRepository cashRepository)
+        public CreditoService(ICreditoRepository creditoRepository)
         {
             _creditoRepository = creditoRepository;
-            _cashRepository = cashRepository;
         }
 
         public async Task<AbonoResult> RegistrarAbonoAsync(RegistrarAbonoRequest request)
@@ -49,11 +47,10 @@ namespace Mercurio.Application.Services
                 Observacion = request.Observacion ?? string.Empty
             };
 
-            await _creditoRepository.RegistrarAbonoAsync(abono, nuevoSaldo, (int)estado);
-
+            CajaMovimiento? movimientoCaja = null;
             if (request.MetodoPago == MetodoPago.Efectivo && !string.IsNullOrWhiteSpace(request.CajaSesionId))
             {
-                await _cashRepository.InsertarMovimientoAsync(new CajaMovimiento
+                movimientoCaja = new CajaMovimiento
                 {
                     CajaSesionId = request.CajaSesionId,
                     Tipo = TipoMovimientoCaja.Cobro,
@@ -62,8 +59,11 @@ namespace Mercurio.Application.Services
                     Fecha = abono.Fecha,
                     UsuarioId = request.UsuarioId,
                     Referencia = abono.Referencia
-                });
+                };
             }
+
+            await _creditoRepository.RegistrarAbonoAsync(
+                abono, cuenta.Saldo, nuevoSaldo, (int)estado, movimientoCaja);
 
             cuenta.Saldo = nuevoSaldo;
             cuenta.Estado = estado;

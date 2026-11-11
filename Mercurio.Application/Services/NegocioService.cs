@@ -28,12 +28,7 @@ namespace Mercurio.Application.Services
 
         public async Task<Negocio> CrearNegocioAsync(Negocio negocio)
         {
-            if (string.IsNullOrWhiteSpace(negocio.Nombre))
-                throw new BusinessException("El nombre del negocio es obligatorio.");
-
-            if (string.IsNullOrWhiteSpace(negocio.Moneda))
-                negocio.Moneda = "PEN";
-
+            ValidarNegocio(negocio);
             await _negocioRepository.InsertarAsync(negocio);
             return negocio;
         }
@@ -44,10 +39,23 @@ namespace Mercurio.Application.Services
             if (existente is null)
                 throw new BusinessException("El negocio no existe.");
 
+            ValidarNegocio(negocio);
+            await _negocioRepository.ActualizarAsync(negocio);
+        }
+
+        private static void ValidarNegocio(Negocio negocio)
+        {
             if (string.IsNullOrWhiteSpace(negocio.Nombre))
                 throw new BusinessException("El nombre del negocio es obligatorio.");
 
-            await _negocioRepository.ActualizarAsync(negocio);
+            if (string.IsNullOrWhiteSpace(negocio.Moneda))
+                negocio.Moneda = "BOB";
+
+            if (string.IsNullOrWhiteSpace(negocio.ZonaHoraria))
+                negocio.ZonaHoraria = "America/La_Paz";
+
+            if (negocio.ImpuestoPorcentaje < 0 || negocio.ImpuestoPorcentaje > 100)
+                throw new BusinessException("El porcentaje de impuesto debe estar entre 0 y 100.");
         }
 
         public Task<IEnumerable<Sucursal>> GetSucursalesAsync(string negocioId)

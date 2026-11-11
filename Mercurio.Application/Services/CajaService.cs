@@ -71,8 +71,7 @@ namespace Mercurio.Application.Services
                 Observacion = request.Observacion ?? string.Empty
             };
 
-            await _cashRepository.InsertarSesionAsync(sesion);
-            await _cashRepository.InsertarMovimientoAsync(new CajaMovimiento
+            await _cashRepository.InsertarSesionConAperturaAsync(sesion, new CajaMovimiento
             {
                 CajaSesionId = sesion.Id,
                 Tipo = TipoMovimientoCaja.Apertura,
@@ -96,34 +95,20 @@ namespace Mercurio.Application.Services
             if (sesion.Estado == EstadoCajaSesion.Cerrada)
                 throw new BusinessException("La sesión de caja ya está cerrada.");
 
-            var movimientos = (await _cashRepository.GetMovimientosAsync(sesion.Id)).ToList();
-            var ventasEfectivo = Money.Round(movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Venta).Sum(m => m.Monto));
-            var cobrosEfectivo = Money.Round(movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Cobro).Sum(m => m.Monto));
-            var ingresos = Money.Round(movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Ingreso).Sum(m => m.Monto));
-            var egresos = Money.Round(movimientos.Where(m => m.Tipo == TipoMovimientoCaja.Egreso).Sum(m => m.Monto));
-
-            var montoEsperado = await _cashRepository.CalcularMontoSistemaAsync(sesion.Id);
-            montoEsperado = Money.Round(montoEsperado);
-            var diferencia = Money.Round(request.MontoDeclarado - montoEsperado);
-
-            sesion.FechaCierre = DateTime.Now;
-            sesion.MontoEsperado = montoEsperado;
-            sesion.MontoDeclarado = Money.Round(request.MontoDeclarado);
-            sesion.Diferencia = diferencia;
-            sesion.Estado = EstadoCajaSesion.Cerrada;
-            sesion.Observacion = request.Observacion ?? string.Empty;
-
-            await _cashRepository.ActualizarSesionAsync(sesion);
+            var calculo = await _cashRepository.CerrarSesionAsync(
+                request.CajaSesionId,
+                Money.Round(request.MontoDeclarado),
+                request.Observacion ?? string.Empty);
 
             return new CierreCajaResult
             {
-                Sesion = sesion,
-                VentasEfectivo = ventasEfectivo,
-                CobrosEfectivo = cobrosEfectivo,
-                Ingresos = ingresos,
-                Egresos = egresos,
-                MontoEsperado = montoEsperado,
-                Diferencia = diferencia
+                Sesion = calculo.Sesion,
+                VentasEfectivo = calculo.VentasEfectivo,
+                CobrosEfectivo = calculo.CobrosEfectivo,
+                Ingresos = calculo.Ingresos,
+                Egresos = calculo.Egresos,
+                MontoEsperado = calculo.MontoEsperado,
+                Diferencia = calculo.Diferencia
             };
         }
 

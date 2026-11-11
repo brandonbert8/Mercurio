@@ -23,6 +23,7 @@ namespace Mercurio.Application.DTOs
         public List<CompraItemRequest> Items { get; set; } = new();
         public MetodoPago MetodoPago { get; set; } = MetodoPago.Efectivo;
         public decimal MontoPagado { get; set; }
+        public int DiasCredito { get; set; } = 30;
         public string Observacion { get; set; } = string.Empty;
     }
 
@@ -30,5 +31,23 @@ namespace Mercurio.Application.DTOs
     {
         public Compra Compra { get; set; } = new();
         public List<CompraDetalle> Detalles { get; set; } = new();
+        public CuentaPorPagar? CuentaPorPagar { get; set; }
+    }
+
+    public class RegistrarAbonoPagoRequest
+    {
+        public string CuentaPorPagarId { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public MetodoPago MetodoPago { get; set; } = MetodoPago.Efectivo;
+        public string Referencia { get; set; } = string.Empty;
+        public string? UsuarioId { get; set; }
+        public string? CajaSesionId { get; set; }
+        public string Observacion { get; set; } = string.Empty;
+    }
+
+    public class AbonoPagoResult
+    {
+        public AbonoPago Abono { get; set; } = new();
+        public CuentaPorPagar Cuenta { get; set; } = new();
     }
 }

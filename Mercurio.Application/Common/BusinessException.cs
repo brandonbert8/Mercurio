@@ -1,3 +1,5 @@
+using Mercurio.Domain.Calculations;
+
 namespace Mercurio.Application.Common
 {
     public class BusinessException : Exception
@@ -11,7 +13,7 @@ namespace Mercurio.Application.Common
     {
         public static decimal Round(decimal value)
         {
-            return decimal.Round(value, 2, MidpointRounding.AwayFromZero);
+            return PricingCalculator.Redondear(value);
         }
     }
 }

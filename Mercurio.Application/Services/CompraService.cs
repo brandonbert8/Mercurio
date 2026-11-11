@@ -95,9 +95,8 @@ namespace Mercurio.Application.Services
             if (request.MontoPagado < 0)
                 throw new BusinessException("El monto pagado no puede ser negativo.");
 
-            var numero = string.IsNullOrWhiteSpace(request.NumeroDocumento)
-                ? await _compraRepository.GenerarNumeroAsync(request.SucursalId, DateTime.Now)
-                : request.NumeroDocumento.Trim();
+            var montoPagado = Math.Min(request.MontoPagado, total);
+            var saldo = Money.Round(total - montoPagado);
 
             var compra = new Compra
             {
@@ -106,21 +105,38 @@ namespace Mercurio.Application.Services
                 ProveedorId = request.ProveedorId,
                 AlmacenId = request.AlmacenId,
                 UsuarioId = request.UsuarioId,
-                NumeroDocumento = numero,
+                NumeroDocumento = request.NumeroDocumento?.Trim() ?? string.Empty,
                 TipoDocumento = request.TipoDocumento,
                 Fecha = DateTime.Now,
                 SubTotal = subTotal,
                 Impuesto = impuesto,
                 Total = total,
-                MontoPagado = Math.Min(request.MontoPagado, total),
+                MontoPagado = montoPagado,
                 MetodoPago = request.MetodoPago,
                 Estado = EstadoCompra.Recibida,
                 Observacion = request.Observacion ?? string.Empty
             };
 
-            await _compraRepository.CrearAsync(compra, detalles);
+            CuentaPorPagar? cuenta = null;
+            if (saldo > 0)
+            {
+                var dias = request.DiasCredito <= 0 ? 30 : request.DiasCredito;
+                cuenta = new CuentaPorPagar
+                {
+                    CompraId = compraId,
+                    ProveedorId = request.ProveedorId,
+                    FechaEmision = compra.Fecha,
+                    FechaVencimiento = compra.Fecha.AddDays(dias),
+                    MontoOriginal = saldo,
+                    Saldo = saldo,
+                    Estado = montoPagado > 0 ? EstadoCuentaPagar.Parcial : EstadoCuentaPagar.Pendiente,
+                    Observacion = request.Observacion ?? string.Empty
+                };
+            }
 
-            return new CompraResult { Compra = compra, Detalles = detalles };
+            await _compraRepository.CrearAsync(compra, detalles, cuenta);
+
+            return new CompraResult { Compra = compra, Detalles = detalles, CuentaPorPagar = cuenta };
         }
 
         public async Task AnularCompraAsync(string compraId)

@@ -1,6 +1,7 @@
 ﻿using Mercurio.Application.Common;
 using Mercurio.Application.DTOs;
 using Mercurio.Application.Interfaces;
+using Mercurio.Domain.Calculations;
 using Mercurio.Domain.Entities;
 using Mercurio.Domain.Enums;
 using Mercurio.Domain.Interfaces;
@@ -28,6 +29,14 @@ namespace Mercurio.Application.Services
             _clienteRepository = clienteRepository;
             _creditoRepository = creditoRepository;
         }
+
+        private sealed record LineaVenta(
+            Product Producto,
+            int Cantidad,
+            decimal Precio,
+            decimal Descuento,
+            decimal Tasa,
+            decimal TotalLinea);
 
         public async Task<IEnumerable<Product>> GetCatalogAsync()
         {
@@ -74,8 +83,7 @@ namespace Mercurio.Application.Services
             var detalles = new List<VentaDetalle>();
             var cantidadesPorProducto = new Dictionary<string, int>();
             var productos = new Dictionary<string, Product>();
-            decimal subTotal = 0;
-            decimal impuesto = 0;
+            var lineas = new List<LineaVenta>();
 
             foreach (var item in request.Items)
             {
@@ -96,29 +104,16 @@ namespace Mercurio.Application.Services
                 if (precio < 0)
                     throw new BusinessException($"El precio del producto {producto.Nombre} no puede ser negativo.");
 
-                var importe = Money.Round(item.Cantidad * precio - item.Descuento);
-                if (importe < 0)
+                var totalLinea = Money.Round(item.Cantidad * precio - item.Descuento);
+                if (totalLinea < 0)
                     throw new BusinessException($"El descuento del producto {producto.Nombre} supera el importe.");
 
                 var tasa = item.ImpuestoPorcentaje ?? producto.ImpuestoPorcentaje;
-                var impuestoLinea = Money.Round(importe * tasa / 100m);
-
-                subTotal += importe;
-                impuesto += impuestoLinea;
+                if (tasa < 0)
+                    throw new BusinessException($"El impuesto del producto {producto.Nombre} no puede ser negativo.");
 
                 cantidadesPorProducto[producto.Id] = cantidadesPorProducto.GetValueOrDefault(producto.Id) + item.Cantidad;
-
-                detalles.Add(new VentaDetalle
-                {
-                    VentaId = ventaId,
-                    ProductoId = producto.Id,
-                    ProductoNombre = producto.Nombre,
-                    Cantidad = item.Cantidad,
-                    PrecioUnitario = precio,
-                    Descuento = item.Descuento,
-                    ImpuestoPorcentaje = tasa,
-                    SubTotal = Money.Round(importe + impuestoLinea)
-                });
+                lineas.Add(new LineaVenta(producto, item.Cantidad, precio, item.Descuento, tasa, totalLinea));
             }
 
             foreach (var par in cantidadesPorProducto)
@@ -132,12 +127,44 @@ namespace Mercurio.Application.Services
                     throw new BusinessException($"Stock insuficiente para el producto {producto.Nombre}.");
             }
 
-            subTotal = Money.Round(subTotal);
-            impuesto = Money.Round(impuesto);
             if (request.Descuento < 0)
                 throw new BusinessException("El descuento global no puede ser negativo.");
 
-            var total = Money.Round(subTotal + impuesto - request.Descuento);
+            var totalLineas = Money.Round(lineas.Sum(l => l.TotalLinea));
+            if (request.Descuento > totalLineas)
+                throw new BusinessException("El descuento global supera el total de la venta.");
+
+            var desgloses = PricingCalculator.DesglosarConDescuentoGlobal(
+                lineas.Select(l => (l.TotalLinea, l.Tasa)).ToList(),
+                request.Descuento);
+
+            decimal subTotal = 0;
+            decimal impuesto = 0;
+
+            for (var i = 0; i < lineas.Count; i++)
+            {
+                var linea = lineas[i];
+                var desglose = desgloses[i];
+
+                subTotal += desglose.BaseImponible;
+                impuesto += desglose.Impuesto;
+
+                detalles.Add(new VentaDetalle
+                {
+                    VentaId = ventaId,
+                    ProductoId = linea.Producto.Id,
+                    ProductoNombre = linea.Producto.Nombre,
+                    Cantidad = linea.Cantidad,
+                    PrecioUnitario = linea.Precio,
+                    Descuento = linea.Descuento,
+                    ImpuestoPorcentaje = linea.Tasa,
+                    SubTotal = desglose.Total
+                });
+            }
+
+            subTotal = Money.Round(subTotal);
+            impuesto = Money.Round(impuesto);
+            var total = Money.Round(subTotal + impuesto);
             if (total < 0)
                 throw new BusinessException("El descuento global supera el total de la venta.");
 
@@ -173,8 +200,6 @@ namespace Mercurio.Application.Services
                 };
             }
 
-            var numero = await _saleRepository.GenerarNumeroAsync(request.SucursalId, DateTime.Now);
-
             var venta = new Venta
             {
                 Id = ventaId,
@@ -183,7 +208,7 @@ namespace Mercurio.Application.Services
                 UsuarioId = request.UsuarioId,
                 ClienteId = cliente?.Id,
                 CajaSesionId = request.CajaSesionId,
-                NumeroDocumento = numero,
+                NumeroDocumento = string.Empty,
                 TipoDocumento = request.TipoDocumento,
                 Fecha = DateTime.Now,
                 SubTotal = subTotal,
@@ -205,7 +230,7 @@ namespace Mercurio.Application.Services
                     Tipo = TipoPago.Venta,
                     MetodoPago = request.MetodoPago == MetodoPago.Credito ? MetodoPago.Efectivo : request.MetodoPago,
                     Monto = montoAplicado,
-                    Referencia = numero,
+                    Referencia = string.Empty,
                     UsuarioId = request.UsuarioId,
                     Fecha = DateTime.Now,
                     Observacion = request.Observacion ?? string.Empty
@@ -235,7 +260,6 @@ namespace Mercurio.Application.Services
                 throw new BusinessException("Debe indicar el motivo de la anulación.");
 
             await _saleRepository.AnularAsync(ventaId, usuarioId, motivo);
-            await _creditoRepository.AnularPorVentaAsync(ventaId);
         }
 
         public Task<Venta?> GetVentaAsync(string id)
