@@ -1,6 +1,4 @@
-﻿using Mercurio.Domain.Interfaces;
-using Mercurio.Infrastructure;
-using Mercurio.Infrastructure.Repositories;
+﻿using Mercurio.Infrastructure;
 using Mercurio.WPF.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +13,7 @@ namespace Mercurio.WPF
     public partial class App : System.Windows.Application // Soluciona la ambigüedad
     {
         private readonly IHost _host;
+        private IServiceScope? _scope;
 
         public App()
         {
@@ -26,14 +25,13 @@ namespace Mercurio.WPF
                 .UseSerilog()
                 .ConfigureAppConfiguration((context, configurationBuilder) =>
                 {
-                    configurationBuilder.SetBasePath(Directory.GetCurrentDirectory());
+                    configurationBuilder.SetBasePath(AppContext.BaseDirectory);
                     configurationBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                 })
                 .ConfigureServices((context, services) =>
                 {
                     string connectionString = context.Configuration.GetConnectionString("DefaultConnection")!;
-                    services.AddSingleton(connectionString);
-                    services.AddScoped<IProductRepository,ProductRepository>();
+                    services.AddMercurioBusinessLogic(connectionString);
                     // Registrar capas
                     services.AddTransient<MainViewModel>();
                     services.AddTransient<MainWindow>(provider => new MainWindow
@@ -55,7 +53,8 @@ namespace Mercurio.WPF
                 var connectionString = _host.Services.GetRequiredService<string>();
                 DatabaseInitializer.Initialize(connectionString);
 
-                var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+                _scope = _host.Services.CreateScope();
+                var mainWindow = _scope.ServiceProvider.GetRequiredService<MainWindow>();
                 mainWindow.Show();
 
                 base.OnStartup(e);
@@ -70,6 +69,7 @@ namespace Mercurio.WPF
 
         protected override async void OnExit(ExitEventArgs e)
         {
+            _scope?.Dispose();
             await _host.StopAsync();
             _host.Dispose();
             Log.CloseAndFlush();
