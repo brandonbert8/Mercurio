@@ -156,7 +156,12 @@ namespace Mercurio.Infrastructure.Repositories
             await connection.ExecuteAsync(sql, cuenta);
         }
 
-        public async Task RegistrarAbonoAsync(AbonoCobro abono, decimal nuevoSaldo, int estado)
+        public async Task RegistrarAbonoAsync(
+            AbonoCobro abono,
+            decimal saldoAnterior,
+            decimal nuevoSaldo,
+            int estado,
+            CajaMovimiento? movimientoCaja = null)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
@@ -170,12 +175,42 @@ namespace Mercurio.Infrastructure.Repositories
                 abono,
                 transaction);
 
-            await connection.ExecuteAsync(
-                "UPDATE CuentasPorCobrar SET Saldo = @Saldo, Estado = @Estado WHERE Id = @Id",
-                new { Saldo = nuevoSaldo, Estado = estado, Id = abono.CuentaPorCobrarId },
+            var affected = await connection.ExecuteAsync(
+                "UPDATE CuentasPorCobrar SET Saldo = @Saldo, Estado = @Estado WHERE Id = @Id AND Saldo = @SaldoAnterior",
+                new
+                {
+                    Saldo = nuevoSaldo,
+                    Estado = estado,
+                    Id = abono.CuentaPorCobrarId,
+                    SaldoAnterior = saldoAnterior
+                },
                 transaction);
 
+            if (affected == 0)
+                throw new InvalidOperationException("La cuenta cambió mientras se registraba el abono. Intente nuevamente.");
+
+            if (movimientoCaja is not null)
+            {
+                await connection.ExecuteAsync(@"
+                    INSERT INTO CajaMovimientos (Id, CajaSesionId, Tipo, Concepto, Monto, Fecha, UsuarioId, Referencia)
+                    VALUES (@Id, @CajaSesionId, @Tipo, @Concepto, @Monto, @Fecha, @UsuarioId, @Referencia)",
+                    movimientoCaja,
+                    transaction);
+            }
+
             transaction.Commit();
+        }
+
+        public async Task<bool> TieneAbonosPorVentaAsync(string ventaId)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var count = await connection.ExecuteScalarAsync<int>(@"
+                SELECT COUNT(1)
+                FROM AbonosCobro a
+                INNER JOIN CuentasPorCobrar c ON c.Id = a.CuentaPorCobrarId
+                WHERE c.VentaId = @VentaId",
+                new { VentaId = ventaId });
+            return count > 0;
         }
 
         public async Task ActualizarEstadoAsync(string cuentaId, int estado)

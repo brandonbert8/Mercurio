@@ -30,8 +30,10 @@ namespace Mercurio.Infrastructure.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             const string sql = @"
-                INSERT INTO Negocios (Id, Nombre, RazonSocial, Ruc, Direccion, Telefono, Email, Moneda, ZonaHoraria, Activo, FechaCreacion)
-                VALUES (@Id, @Nombre, @RazonSocial, @Ruc, @Direccion, @Telefono, @Email, @Moneda, @ZonaHoraria, @Activo, @FechaCreacion)";
+                INSERT INTO Negocios (Id, Nombre, RazonSocial, Ruc, Direccion, Telefono, Email, Moneda, ZonaHoraria,
+                    ImpuestoPorcentaje, PrecioIncluyeImpuesto, Activo, FechaCreacion)
+                VALUES (@Id, @Nombre, @RazonSocial, @Ruc, @Direccion, @Telefono, @Email, @Moneda, @ZonaHoraria,
+                    @ImpuestoPorcentaje, @PrecioIncluyeImpuesto, @Activo, @FechaCreacion)";
             await connection.ExecuteAsync(sql, negocio);
         }
 
@@ -41,7 +43,9 @@ namespace Mercurio.Infrastructure.Repositories
             const string sql = @"
                 UPDATE Negocios SET
                     Nombre = @Nombre, RazonSocial = @RazonSocial, Ruc = @Ruc, Direccion = @Direccion,
-                    Telefono = @Telefono, Email = @Email, Moneda = @Moneda, ZonaHoraria = @ZonaHoraria, Activo = @Activo
+                    Telefono = @Telefono, Email = @Email, Moneda = @Moneda, ZonaHoraria = @ZonaHoraria,
+                    ImpuestoPorcentaje = @ImpuestoPorcentaje, PrecioIncluyeImpuesto = @PrecioIncluyeImpuesto,
+                    Activo = @Activo
                 WHERE Id = @Id";
             await connection.ExecuteAsync(sql, negocio);
         }

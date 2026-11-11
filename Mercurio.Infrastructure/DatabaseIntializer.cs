@@ -1,4 +1,5 @@
 ﻿using DbUp;
+using Microsoft.Data.Sqlite;
 using System;
 using System.Reflection;
 
@@ -8,6 +9,14 @@ namespace Mercurio.Infrastructure
     {
         public static void Initialize(string connectionString)
         {
+            using (var connection = new SqliteConnection(connectionString))
+            {
+                connection.Open();
+                using var pragma = connection.CreateCommand();
+                pragma.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+                pragma.ExecuteNonQuery();
+            }
+
             var upgrader = DeployChanges.To
                 .SqliteDatabase(connectionString)
                 .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())

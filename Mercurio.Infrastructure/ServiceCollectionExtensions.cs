@@ -27,6 +27,7 @@ namespace Mercurio.Infrastructure
             services.AddScoped<IPagoRepository, PagoRepository>();
             services.AddScoped<IClienteRepository, ClienteRepository>();
             services.AddScoped<ICreditoRepository, CreditoRepository>();
+            services.AddScoped<ICuentaPorPagarRepository, CuentaPorPagarRepository>();
             services.AddScoped<ICashRepository, CashRepository>();
             services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
             services.AddScoped<IReporteRepository, ReporteRepository>();
@@ -40,6 +41,7 @@ namespace Mercurio.Infrastructure
             services.AddScoped<ISaleService, SaleService>();
             services.AddScoped<IClienteService, ClienteService>();
             services.AddScoped<ICreditoService, CreditoService>();
+            services.AddScoped<ICuentaPorPagarService, CuentaPorPagarService>();
             services.AddScoped<ICajaService, CajaService>();
             services.AddScoped<IConfiguracionService, ConfiguracionService>();
             services.AddScoped<IReporteService, ReporteService>();

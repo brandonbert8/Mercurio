@@ -83,6 +83,101 @@ namespace Mercurio.Infrastructure.Repositories
             await connection.ExecuteAsync(sql, sesion);
         }
 
+        public async Task InsertarSesionConAperturaAsync(CajaSesion sesion, CajaMovimiento apertura)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            const string sqlSesion = @"
+                INSERT INTO CajaSesiones (Id, CajaId, UsuarioId, FechaApertura, FechaCierre, MontoInicial,
+                    MontoEsperado, MontoDeclarado, Diferencia, Estado, Observacion)
+                VALUES (@Id, @CajaId, @UsuarioId, @FechaApertura, @FechaCierre, @MontoInicial,
+                    @MontoEsperado, @MontoDeclarado, @Diferencia, @Estado, @Observacion)";
+            await connection.ExecuteAsync(sqlSesion, sesion, transaction);
+
+            const string sqlMovimiento = @"
+                INSERT INTO CajaMovimientos (Id, CajaSesionId, Tipo, Concepto, Monto, Fecha, UsuarioId, Referencia)
+                VALUES (@Id, @CajaSesionId, @Tipo, @Concepto, @Monto, @Fecha, @UsuarioId, @Referencia)";
+            await connection.ExecuteAsync(sqlMovimiento, apertura, transaction);
+
+            transaction.Commit();
+        }
+
+        public async Task<CajaCierreCalculo> CerrarSesionAsync(string cajaSesionId, decimal montoDeclarado, string observacion)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction(deferred: false);
+
+            var sesion = await connection.QueryFirstOrDefaultAsync<CajaSesion>(
+                "SELECT * FROM CajaSesiones WHERE Id = @Id",
+                new { Id = cajaSesionId },
+                transaction);
+
+            if (sesion is null)
+                throw new InvalidOperationException("La sesión de caja no existe.");
+            if (sesion.Estado == EstadoCajaSesion.Cerrada)
+                throw new InvalidOperationException("La sesión de caja ya está cerrada.");
+
+            var movimientos = await connection.QueryAsync<CajaMovimiento>(
+                "SELECT * FROM CajaMovimientos WHERE CajaSesionId = @CajaSesionId",
+                new { CajaSesionId = cajaSesionId },
+                transaction);
+
+            decimal ventas = 0, cobros = 0, ingresos = 0, egresos = 0;
+            foreach (var movimiento in movimientos)
+            {
+                switch (movimiento.Tipo)
+                {
+                    case TipoMovimientoCaja.Venta:
+                        ventas += movimiento.Monto;
+                        break;
+                    case TipoMovimientoCaja.Cobro:
+                        cobros += movimiento.Monto;
+                        break;
+                    case TipoMovimientoCaja.Ingreso:
+                        ingresos += movimiento.Monto;
+                        break;
+                    case TipoMovimientoCaja.Egreso:
+                        egresos += movimiento.Monto;
+                        break;
+                }
+            }
+
+            var montoEsperado = decimal.Round(
+                sesion.MontoInicial + ingresos + ventas + cobros - egresos,
+                2,
+                MidpointRounding.AwayFromZero);
+            var diferencia = decimal.Round(montoDeclarado - montoEsperado, 2, MidpointRounding.AwayFromZero);
+
+            sesion.FechaCierre = DateTime.Now;
+            sesion.MontoEsperado = montoEsperado;
+            sesion.MontoDeclarado = montoDeclarado;
+            sesion.Diferencia = diferencia;
+            sesion.Estado = EstadoCajaSesion.Cerrada;
+            sesion.Observacion = observacion;
+
+            const string sql = @"
+                UPDATE CajaSesiones SET FechaCierre = @FechaCierre, MontoEsperado = @MontoEsperado,
+                    MontoDeclarado = @MontoDeclarado, Diferencia = @Diferencia, Estado = @Estado, Observacion = @Observacion
+                WHERE Id = @Id";
+            await connection.ExecuteAsync(sql, sesion, transaction);
+
+            transaction.Commit();
+
+            return new CajaCierreCalculo
+            {
+                Sesion = sesion,
+                VentasEfectivo = ventas,
+                CobrosEfectivo = cobros,
+                Ingresos = ingresos,
+                Egresos = egresos,
+                MontoEsperado = montoEsperado,
+                Diferencia = diferencia
+            };
+        }
+
         public async Task ActualizarSesionAsync(CajaSesion sesion)
         {
             using var connection = new SqliteConnection(_connectionString);

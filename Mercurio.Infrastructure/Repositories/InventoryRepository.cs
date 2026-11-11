@@ -88,10 +88,30 @@ namespace Mercurio.Infrastructure.Repositories
             await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();
 
-            var delta = ObtenerDelta(movimiento.Tipo, movimiento.Cantidad);
-            await AplicarDeltaAsync(connection, transaction, movimiento.AlmacenId, movimiento.ProductoId, delta, movimiento.CostoUnitario, movimiento.Tipo);
-            await InsertarMovimientoAsync(connection, transaction, movimiento);
+            switch (movimiento.Tipo)
+            {
+                case TipoMovimientoInventario.Entrada:
+                    await StockWriter.AplicarEntradaAsync(
+                        connection, transaction, movimiento.AlmacenId, movimiento.ProductoId,
+                        movimiento.Cantidad, movimiento.CostoUnitario, actualizarCosto: true);
+                    break;
 
+                case TipoMovimientoInventario.Salida:
+                    await StockWriter.AplicarSalidaAsync(
+                        connection, transaction, movimiento.AlmacenId, movimiento.ProductoId, movimiento.Cantidad);
+                    break;
+
+                case TipoMovimientoInventario.Ajuste:
+                    await StockWriter.AplicarAjusteAsync(
+                        connection, transaction, movimiento.AlmacenId, movimiento.ProductoId,
+                        movimiento.Cantidad, movimiento.CostoUnitario);
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Tipo de movimiento no soportado.");
+            }
+
+            await StockWriter.InsertarMovimientoAsync(connection, transaction, movimiento);
             transaction.Commit();
         }
 
@@ -101,10 +121,18 @@ namespace Mercurio.Infrastructure.Repositories
             await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();
 
-            await AplicarDeltaAsync(connection, transaction, salida.AlmacenId, salida.ProductoId, -salida.Cantidad, 0, salida.Tipo);
-            await AplicarDeltaAsync(connection, transaction, entrada.AlmacenId, entrada.ProductoId, entrada.Cantidad, 0, entrada.Tipo);
-            await InsertarMovimientoAsync(connection, transaction, salida);
-            await InsertarMovimientoAsync(connection, transaction, entrada);
+            var costo = await StockWriter.ObtenerCostoPromedioAsync(
+                connection, transaction, salida.AlmacenId, salida.ProductoId);
+
+            await StockWriter.AplicarSalidaAsync(
+                connection, transaction, salida.AlmacenId, salida.ProductoId, salida.Cantidad);
+
+            await StockWriter.AplicarEntradaAsync(
+                connection, transaction, entrada.AlmacenId, entrada.ProductoId,
+                entrada.Cantidad, costo, actualizarCosto: costo > 0);
+
+            await StockWriter.InsertarMovimientoAsync(connection, transaction, salida);
+            await StockWriter.InsertarMovimientoAsync(connection, transaction, entrada);
 
             transaction.Commit();
         }
@@ -118,97 +146,6 @@ namespace Mercurio.Infrastructure.Repositories
                   AND (@AlmacenId IS NULL OR AlmacenId = @AlmacenId)
                 ORDER BY Fecha DESC";
             return await connection.QueryAsync<MovimientoInventario>(sql, new { AlmacenId = almacenId, Desde = desde, Hasta = hasta });
-        }
-
-        private static int ObtenerDelta(TipoMovimientoInventario tipo, int cantidad)
-        {
-            return tipo switch
-            {
-                TipoMovimientoInventario.Entrada => cantidad,
-                TipoMovimientoInventario.TransferenciaEntrada => cantidad,
-                TipoMovimientoInventario.Ajuste => cantidad,
-                TipoMovimientoInventario.Salida => -cantidad,
-                TipoMovimientoInventario.TransferenciaSalida => -cantidad,
-                _ => cantidad
-            };
-        }
-
-        private static async Task AplicarDeltaAsync(
-            SqliteConnection connection,
-            SqliteTransaction transaction,
-            string almacenId,
-            string productoId,
-            int delta,
-            decimal costoUnitario,
-            TipoMovimientoInventario tipo)
-        {
-            var stock = await connection.QueryFirstOrDefaultAsync<StockAlmacen>(
-                "SELECT * FROM StockAlmacen WHERE AlmacenId = @AlmacenId AND ProductoId = @ProductoId",
-                new { AlmacenId = almacenId, ProductoId = productoId },
-                transaction);
-
-            if (stock is null)
-            {
-                if (delta < 0)
-                    throw new InvalidOperationException("No hay stock registrado para el producto en el almacén.");
-
-                var stockMinimo = await connection.ExecuteScalarAsync<int>(
-                    "SELECT COALESCE(StockMinimo, 0) FROM Productos WHERE Id = @ProductoId",
-                    new { ProductoId = productoId },
-                    transaction);
-
-                await connection.ExecuteAsync(@"
-                    INSERT INTO StockAlmacen (Id, AlmacenId, ProductoId, Cantidad, StockMinimo, FechaActualizacion)
-                    VALUES (@Id, @AlmacenId, @ProductoId, @Cantidad, @StockMinimo, @FechaActualizacion)",
-                    new
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        AlmacenId = almacenId,
-                        ProductoId = productoId,
-                        Cantidad = delta,
-                        StockMinimo = stockMinimo,
-                        FechaActualizacion = DateTime.Now
-                    },
-                    transaction);
-            }
-            else
-            {
-                var nuevaCantidad = stock.Cantidad + delta;
-                if (nuevaCantidad < 0)
-                    throw new InvalidOperationException("La operación dejaría el stock en negativo.");
-
-                await connection.ExecuteAsync(@"
-                    UPDATE StockAlmacen SET Cantidad = @Cantidad, FechaActualizacion = @FechaActualizacion
-                    WHERE Id = @Id",
-                    new { Id = stock.Id, Cantidad = nuevaCantidad, FechaActualizacion = DateTime.Now },
-                    transaction);
-            }
-
-            await connection.ExecuteAsync(
-                "UPDATE Productos SET StockActual = StockActual + @Delta WHERE Id = @ProductoId",
-                new { Delta = delta, ProductoId = productoId },
-                transaction);
-
-            if (tipo == TipoMovimientoInventario.Entrada && costoUnitario > 0)
-            {
-                await connection.ExecuteAsync(
-                    "UPDATE Productos SET PrecioCompra = @Costo WHERE Id = @ProductoId",
-                    new { Costo = costoUnitario, ProductoId = productoId },
-                    transaction);
-            }
-        }
-
-        private static async Task InsertarMovimientoAsync(
-            SqliteConnection connection,
-            SqliteTransaction transaction,
-            MovimientoInventario movimiento)
-        {
-            const string sql = @"
-                INSERT INTO MovimientosInventario (Id, AlmacenId, AlmacenDestinoId, ProductoId, Tipo, Cantidad,
-                    CostoUnitario, Referencia, Observacion, UsuarioId, Fecha)
-                VALUES (@Id, @AlmacenId, @AlmacenDestinoId, @ProductoId, @Tipo, @Cantidad,
-                    @CostoUnitario, @Referencia, @Observacion, @UsuarioId, @Fecha)";
-            await connection.ExecuteAsync(sql, movimiento, transaction);
         }
     }
 }

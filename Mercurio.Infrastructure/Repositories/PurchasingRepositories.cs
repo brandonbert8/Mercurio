@@ -98,11 +98,15 @@ namespace Mercurio.Infrastructure.Repositories
                 new { CompraId = compraId });
         }
 
-        public async Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles)
+        public async Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
             using var transaction = connection.BeginTransaction();
+
+            if (string.IsNullOrWhiteSpace(compra.NumeroDocumento))
+                compra.NumeroDocumento = await DocumentNumberGenerator.GenerarAsync(
+                    connection, transaction, compra.SucursalId, compra.TipoDocumento, compra.Fecha);
 
             const string sqlCompra = @"
                 INSERT INTO Compras (Id, SucursalId, ProveedorId, AlmacenId, UsuarioId, NumeroDocumento, TipoDocumento,
@@ -146,6 +150,17 @@ namespace Mercurio.Infrastructure.Repositories
                     transaction);
             }
 
+            if (cuenta is not null)
+            {
+                await connection.ExecuteAsync(@"
+                    INSERT INTO CuentasPorPagar (Id, CompraId, ProveedorId, FechaEmision, FechaVencimiento,
+                        MontoOriginal, Saldo, Estado, Observacion)
+                    VALUES (@Id, @CompraId, @ProveedorId, @FechaEmision, @FechaVencimiento,
+                        @MontoOriginal, @Saldo, @Estado, @Observacion)",
+                    cuenta,
+                    transaction);
+            }
+
             transaction.Commit();
         }
 
@@ -153,13 +168,26 @@ namespace Mercurio.Infrastructure.Repositories
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
-            using var transaction = connection.BeginTransaction();
+            using var transaction = connection.BeginTransaction(deferred: false);
 
             var compra = await connection.QueryFirstOrDefaultAsync<Compra>(
                 "SELECT * FROM Compras WHERE Id = @Id", new { Id = compraId }, transaction);
 
             if (compra is null)
                 throw new InvalidOperationException("La compra no existe.");
+            if (compra.Estado == EstadoCompra.Anulada)
+                throw new InvalidOperationException("La compra ya está anulada.");
+
+            var tieneAbonos = await connection.ExecuteScalarAsync<int>(@"
+                SELECT COUNT(1)
+                FROM AbonosPago a
+                INNER JOIN CuentasPorPagar c ON c.Id = a.CuentaPorPagarId
+                WHERE c.CompraId = @CompraId",
+                new { CompraId = compraId },
+                transaction);
+
+            if (tieneAbonos > 0)
+                throw new InvalidOperationException("No se puede anular una compra con abonos registrados.");
 
             var detalles = await connection.QueryAsync<CompraDetalle>(
                 "SELECT * FROM CompraDetalles WHERE CompraId = @CompraId", new { CompraId = compraId }, transaction);
@@ -174,18 +202,24 @@ namespace Mercurio.Infrastructure.Repositories
                 new { Estado = (int)EstadoCompra.Anulada, Id = compraId },
                 transaction);
 
+            await connection.ExecuteAsync(@"
+                UPDATE CuentasPorPagar
+                SET Estado = @Estado, Saldo = 0
+                WHERE CompraId = @CompraId AND Estado <> @Estado",
+                new { Estado = (int)EstadoCuentaPagar.Anulada, CompraId = compraId },
+                transaction);
+
             transaction.Commit();
         }
 
-        public async Task<string> GenerarNumeroAsync(string sucursalId, DateTime fecha)
+        public async Task<string> GenerarNumeroAsync(string sucursalId, TipoDocumento tipoDocumento, DateTime fecha)
         {
             using var connection = new SqliteConnection(_connectionString);
-            var prefijo = $"C-{fecha:yyyy}-";
-            var count = await connection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(1) FROM Compras WHERE SucursalId = @SucursalId AND NumeroDocumento LIKE @Prefijo",
-                new { SucursalId = sucursalId, Prefijo = $"{prefijo}%" });
-
-            return $"{prefijo}{count + 1:000000}";
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+            var numero = await DocumentNumberGenerator.GenerarAsync(connection, transaction, sucursalId, tipoDocumento, fecha);
+            transaction.Commit();
+            return numero;
         }
 
         private static async Task AplicarEntradaStockAsync(
@@ -194,65 +228,22 @@ namespace Mercurio.Infrastructure.Repositories
             Compra compra,
             CompraDetalle detalle)
         {
-            var stock = await connection.QueryFirstOrDefaultAsync<StockAlmacen>(
-                "SELECT * FROM StockAlmacen WHERE AlmacenId = @AlmacenId AND ProductoId = @ProductoId",
-                new { AlmacenId = compra.AlmacenId, ProductoId = detalle.ProductoId },
-                transaction);
+            await StockWriter.AplicarEntradaAsync(
+                connection, transaction, compra.AlmacenId, detalle.ProductoId,
+                detalle.Cantidad, detalle.CostoUnitario, actualizarCosto: true);
 
-            if (stock is null)
+            await StockWriter.InsertarMovimientoAsync(connection, transaction, new MovimientoInventario
             {
-                var stockMinimo = await connection.ExecuteScalarAsync<int>(
-                    "SELECT COALESCE(StockMinimo, 0) FROM Productos WHERE Id = @ProductoId",
-                    new { ProductoId = detalle.ProductoId },
-                    transaction);
-
-                await connection.ExecuteAsync(@"
-                    INSERT INTO StockAlmacen (Id, AlmacenId, ProductoId, Cantidad, StockMinimo, FechaActualizacion)
-                    VALUES (@Id, @AlmacenId, @ProductoId, @Cantidad, @StockMinimo, @FechaActualizacion)",
-                    new
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        AlmacenId = compra.AlmacenId,
-                        ProductoId = detalle.ProductoId,
-                        Cantidad = detalle.Cantidad,
-                        StockMinimo = stockMinimo,
-                        FechaActualizacion = DateTime.Now
-                    },
-                    transaction);
-            }
-            else
-            {
-                await connection.ExecuteAsync(
-                    "UPDATE StockAlmacen SET Cantidad = Cantidad + @Cantidad, FechaActualizacion = @Fecha WHERE Id = @Id",
-                    new { Cantidad = detalle.Cantidad, Fecha = DateTime.Now, Id = stock.Id },
-                    transaction);
-            }
-
-            await connection.ExecuteAsync(@"
-                UPDATE Productos SET StockActual = StockActual + @Cantidad, PrecioCompra = @Costo
-                WHERE Id = @ProductoId",
-                new { Cantidad = detalle.Cantidad, Costo = detalle.CostoUnitario, ProductoId = detalle.ProductoId },
-                transaction);
-
-            await connection.ExecuteAsync(@"
-                INSERT INTO MovimientosInventario (Id, AlmacenId, AlmacenDestinoId, ProductoId, Tipo, Cantidad,
-                    CostoUnitario, Referencia, Observacion, UsuarioId, Fecha)
-                VALUES (@Id, @AlmacenId, NULL, @ProductoId, @Tipo, @Cantidad,
-                    @CostoUnitario, @Referencia, @Observacion, @UsuarioId, @Fecha)",
-                new
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AlmacenId = compra.AlmacenId,
-                    ProductoId = detalle.ProductoId,
-                    Tipo = (int)TipoMovimientoInventario.Entrada,
-                    Cantidad = detalle.Cantidad,
-                    CostoUnitario = detalle.CostoUnitario,
-                    Referencia = compra.NumeroDocumento,
-                    Observacion = "Compra de proveedor",
-                    UsuarioId = compra.UsuarioId,
-                    Fecha = compra.Fecha
-                },
-                transaction);
+                AlmacenId = compra.AlmacenId,
+                ProductoId = detalle.ProductoId,
+                Tipo = TipoMovimientoInventario.Entrada,
+                Cantidad = detalle.Cantidad,
+                CostoUnitario = detalle.CostoUnitario,
+                Referencia = compra.NumeroDocumento,
+                Observacion = "Compra de proveedor",
+                UsuarioId = compra.UsuarioId,
+                Fecha = compra.Fecha
+            });
         }
 
         private static async Task AplicarSalidaStockAsync(
@@ -261,43 +252,21 @@ namespace Mercurio.Infrastructure.Repositories
             Compra compra,
             CompraDetalle detalle)
         {
-            var stock = await connection.QueryFirstOrDefaultAsync<StockAlmacen>(
-                "SELECT * FROM StockAlmacen WHERE AlmacenId = @AlmacenId AND ProductoId = @ProductoId",
-                new { AlmacenId = compra.AlmacenId, ProductoId = detalle.ProductoId },
-                transaction);
+            await StockWriter.AplicarSalidaAsync(
+                connection, transaction, compra.AlmacenId, detalle.ProductoId, detalle.Cantidad);
 
-            if (stock is null || stock.Cantidad < detalle.Cantidad)
-                throw new InvalidOperationException("No hay stock suficiente para anular la compra.");
-
-            await connection.ExecuteAsync(
-                "UPDATE StockAlmacen SET Cantidad = Cantidad - @Cantidad, FechaActualizacion = @Fecha WHERE Id = @Id",
-                new { Cantidad = detalle.Cantidad, Fecha = DateTime.Now, Id = stock.Id },
-                transaction);
-
-            await connection.ExecuteAsync(
-                "UPDATE Productos SET StockActual = StockActual - @Cantidad WHERE Id = @ProductoId",
-                new { Cantidad = detalle.Cantidad, ProductoId = detalle.ProductoId },
-                transaction);
-
-            await connection.ExecuteAsync(@"
-                INSERT INTO MovimientosInventario (Id, AlmacenId, AlmacenDestinoId, ProductoId, Tipo, Cantidad,
-                    CostoUnitario, Referencia, Observacion, UsuarioId, Fecha)
-                VALUES (@Id, @AlmacenId, NULL, @ProductoId, @Tipo, @Cantidad,
-                    @CostoUnitario, @Referencia, @Observacion, @UsuarioId, @Fecha)",
-                new
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    AlmacenId = compra.AlmacenId,
-                    ProductoId = detalle.ProductoId,
-                    Tipo = (int)TipoMovimientoInventario.Salida,
-                    Cantidad = detalle.Cantidad,
-                    CostoUnitario = detalle.CostoUnitario,
-                    Referencia = compra.NumeroDocumento,
-                    Observacion = "Anulación de compra",
-                    UsuarioId = compra.UsuarioId,
-                    Fecha = DateTime.Now
-                },
-                transaction);
+            await StockWriter.InsertarMovimientoAsync(connection, transaction, new MovimientoInventario
+            {
+                AlmacenId = compra.AlmacenId,
+                ProductoId = detalle.ProductoId,
+                Tipo = TipoMovimientoInventario.Salida,
+                Cantidad = detalle.Cantidad,
+                CostoUnitario = detalle.CostoUnitario,
+                Referencia = compra.NumeroDocumento,
+                Observacion = "Anulación de compra",
+                UsuarioId = compra.UsuarioId,
+                Fecha = DateTime.Now
+            });
         }
     }
 }
