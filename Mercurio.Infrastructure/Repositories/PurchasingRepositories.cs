@@ -98,7 +98,7 @@ namespace Mercurio.Infrastructure.Repositories
                 new { CompraId = compraId });
         }
 
-        public async Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta)
+        public async Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta, string? cajaSesionId = null)
         {
             using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
@@ -135,6 +135,7 @@ namespace Mercurio.Infrastructure.Repositories
                     Tipo = TipoPago.Compra,
                     MetodoPago = compra.MetodoPago,
                     Monto = compra.MontoPagado,
+                    CajaSesionId = cajaSesionId,
                     Referencia = compra.NumeroDocumento,
                     UsuarioId = compra.UsuarioId,
                     Fecha = compra.Fecha,
@@ -148,6 +149,25 @@ namespace Mercurio.Infrastructure.Repositories
                         @MetodoPago, @Monto, @Referencia, @UsuarioId, @Fecha, @Observacion)",
                     pago,
                     transaction);
+
+                if (compra.MetodoPago == MetodoPago.Efectivo && !string.IsNullOrWhiteSpace(cajaSesionId))
+                {
+                    await connection.ExecuteAsync(@"
+                        INSERT INTO CajaMovimientos (Id, CajaSesionId, Tipo, Concepto, Monto, Fecha, UsuarioId, Referencia)
+                        VALUES (@Id, @CajaSesionId, @Tipo, @Concepto, @Monto, @Fecha, @UsuarioId, @Referencia)",
+                        new
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            CajaSesionId = cajaSesionId,
+                            Tipo = (int)TipoMovimientoCaja.Egreso,
+                            Concepto = $"Pago de compra {compra.NumeroDocumento}",
+                            Monto = compra.MontoPagado,
+                            Fecha = compra.Fecha,
+                            UsuarioId = compra.UsuarioId,
+                            Referencia = compra.NumeroDocumento
+                        },
+                        transaction);
+                }
             }
 
             if (cuenta is not null)

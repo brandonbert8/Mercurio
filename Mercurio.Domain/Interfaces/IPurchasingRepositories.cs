@@ -18,7 +18,7 @@ namespace Mercurio.Domain.Interfaces
         Task<Compra?> GetByIdAsync(string id);
         Task<IEnumerable<Compra>> GetByRangoAsync(string sucursalId, DateTime desde, DateTime hasta);
         Task<IEnumerable<CompraDetalle>> GetDetallesAsync(string compraId);
-        Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta);
+        Task CrearAsync(Compra compra, IEnumerable<CompraDetalle> detalles, CuentaPorPagar? cuenta, string? cajaSesionId = null);
         Task AnularAsync(string compraId);
         Task<string> GenerarNumeroAsync(string sucursalId, TipoDocumento tipoDocumento, DateTime fecha);
     }

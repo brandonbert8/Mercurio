@@ -123,8 +123,10 @@ namespace Mercurio.Application.Services
                     continue;
 
                 var stock = await _inventoryRepository.GetStockProductoAsync(request.AlmacenId, producto.Id);
-                if (stock is null || stock.Cantidad < par.Value)
-                    throw new BusinessException($"Stock insuficiente para el producto {producto.Nombre}.");
+                var disponible = stock?.Cantidad ?? 0;
+                if (disponible < par.Value)
+                    throw new BusinessException(
+                        $"Stock insuficiente para {producto.Nombre}: disponible {disponible}, solicitado {par.Value}. Registra una entrada de stock o una compra antes de vender.");
             }
 
             if (request.Descuento < 0)

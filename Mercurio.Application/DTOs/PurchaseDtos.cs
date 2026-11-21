@@ -18,6 +18,7 @@ namespace Mercurio.Application.DTOs
         public string AlmacenId { get; set; } = string.Empty;
         public string ProveedorId { get; set; } = string.Empty;
         public string UsuarioId { get; set; } = string.Empty;
+        public string? CajaSesionId { get; set; }
         public TipoDocumento TipoDocumento { get; set; } = TipoDocumento.ComprobanteCompra;
         public string NumeroDocumento { get; set; } = string.Empty;
         public List<CompraItemRequest> Items { get; set; } = new();

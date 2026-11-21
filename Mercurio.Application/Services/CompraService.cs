@@ -134,7 +134,7 @@ namespace Mercurio.Application.Services
                 };
             }
 
-            await _compraRepository.CrearAsync(compra, detalles, cuenta);
+            await _compraRepository.CrearAsync(compra, detalles, cuenta, request.CajaSesionId);
 
             return new CompraResult { Compra = compra, Detalles = detalles, CuentaPorPagar = cuenta };
         }
