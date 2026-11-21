@@ -1,0 +1,36 @@
+<UserControl x:Class="Mercurio.WPF.Views.CreditsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Mercurio.WPF">
+    <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="320"/></Grid.ColumnDefinitions>
+                            <DataGrid ItemsSource="{Binding CuentasPorCobrar}" SelectedItem="{Binding CuentaSeleccionada}" Margin="0,0,0,8">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="CLIENTE" Binding="{Binding Cliente}" Width="*"/>
+                                    <DataGridTextColumn Header="EMITIDA" Binding="{Binding FechaEmision, StringFormat={}{0:dd/MM/yyyy}}" Width="110"/>
+                                    <DataGridTemplateColumn Header="VENCE" Width="120"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                        <TextBlock Text="{Binding FechaVencimiento, StringFormat={}{0:dd/MM/yyyy}}" Padding="8,0"
+                                                   Foreground="{Binding FechaVencimiento, Converter={x:Static local:FechaVencimientoColorConverter.Instance}}"/>
+                                    </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="SALDO" Binding="{Binding Saldo, StringFormat=Bs. {0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="DÍAS VENCIDA" Binding="{Binding DiasVencido}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <Border Grid.Column="1" Margin="16,0,0,0" Background="White" CornerRadius="10" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="Registrar cobro" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,14"/>
+                                    <TextBlock Text="Selecciona una cuenta de la lista para ver el saldo pendiente." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                                    <TextBlock Text="Cuenta seleccionada" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                    <TextBlock Text="{Binding CuentaSeleccionada.Cliente}" FontSize="14" FontWeight="SemiBold" Margin="0,3,0,10"/>
+                                    <TextBlock Text="Saldo pendiente" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                    <TextBlock Text="{Binding CuentaSeleccionada.Saldo, StringFormat=Bs. {0:N2}}" FontSize="20" FontWeight="SemiBold" Margin="0,3,0,14"/>
+                                    <TextBlock Text="Monto recibido (Bs.)" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding MontoAbono, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Método de pago" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,4"/>
+                                    <ComboBox Height="38" ItemsSource="{Binding MetodosPago}" SelectedItem="{Binding MetodoPagoAbono}" Margin="0,0,0,14"/>
+                                    <Button Style="{StaticResource Primary}" Command="{Binding RegistrarCobroCommand}" Content="Guardar cobro"/>
+                                    <TextBlock Text="Los cobros en efectivo se suman a la caja abierta." Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+</UserControl>

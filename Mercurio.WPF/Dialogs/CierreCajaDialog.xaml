@@ -1,0 +1,130 @@
+<Window x:Class="Mercurio.WPF.CierreCajaDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cierre de caja"
+        Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Border CornerRadius="14" Background="White"
+            Effect="{StaticResource ShadowElevated}">
+        <StackPanel Margin="28">
+
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                <Border Width="40" Height="40" CornerRadius="20" Background="#EFF6FF">
+                    <TextBlock Text="⊟" FontSize="18" FontWeight="Bold"
+                               Foreground="#2563EB"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Cierre de caja" FontSize="17" FontWeight="SemiBold" Foreground="#17181C"/>
+                    <TextBlock Text="Revisa el cuadre antes de cerrar" FontSize="12" Foreground="#747784"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Cuadre -->
+            <Border Background="#F8F9FA" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="MOVIMIENTOS DE CAJA" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#A3A6AF" Margin="0,0,0,10"/>
+
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="Fondo inicial" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtInicial" FontSize="13" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="Ventas en efectivo" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtVentas" FontSize="13" Foreground="#16A34A" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid x:Name="FilaCobros" Margin="0,0,0,6" Visibility="Collapsed">
+                        <TextBlock Text="Cobros en efectivo" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtCobros" FontSize="13" Foreground="#16A34A" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid x:Name="FilaIngresos" Margin="0,0,0,6" Visibility="Collapsed">
+                        <TextBlock Text="Ingresos manuales" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtIngresos" FontSize="13" Foreground="#16A34A" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid x:Name="FilaEgresos" Margin="0,0,0,6" Visibility="Collapsed">
+                        <TextBlock Text="Egresos / retiros" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtEgresos" FontSize="13" Foreground="#DC2626" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- Separador -->
+                    <Border BorderBrush="#E7E8EC" BorderThickness="0,1,0,0" Margin="0,8,0,8"/>
+
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="Monto esperado en caja" FontSize="13" FontWeight="SemiBold" Foreground="#17181C"/>
+                        <TextBlock x:Name="TxtEsperado" FontSize="14" FontWeight="SemiBold" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="Monto declarado" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtDeclarado" FontSize="13" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- Diferencia destacada -->
+                    <Border x:Name="BorderDiferencia" CornerRadius="6" Padding="10,8" Margin="0,8,0,0">
+                        <Grid>
+                            <TextBlock x:Name="TxtDiferenciaLabel" FontSize="13" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtDiferencia" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Advertencia si hay diferencia -->
+            <Border x:Name="BorderAdvertencia" Background="#FEF3C7" CornerRadius="8" Padding="12,10"
+                    Margin="0,0,0,16" Visibility="Collapsed">
+                <TextBlock x:Name="TxtAdvertencia" FontSize="12" Foreground="#92400E"
+                           TextWrapping="Wrap"/>
+            </Border>
+
+            <!-- Botones -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancelar" Height="44"
+                        Background="#F1F2F5" Foreground="#17181C" BorderThickness="0"
+                        FontSize="13" Cursor="Hand" Click="Cancelar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#E5E6EA"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Grid.Column="2" x:Name="BtnCerrar" Height="44"
+                        Background="#17181C" Foreground="White" BorderThickness="0"
+                        FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                        Click="CerrarCaja_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#30323A"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <TextBlock Text="Cerrar caja" FontSize="13" FontWeight="SemiBold"/>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

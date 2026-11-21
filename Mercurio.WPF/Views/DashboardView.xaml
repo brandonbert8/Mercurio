@@ -1,0 +1,101 @@
+<UserControl x:Class="Mercurio.WPF.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Mercurio.WPF" xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF">
+    <StackPanel>
+                            <Grid Height="104" Margin="0,0,0,28">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,18,0">
+                                    <TextBlock Text="Ventas hoy" Foreground="{StaticResource Muted}"/>
+                                    <TextBlock Text="{Binding VentasHoy, StringFormat=Bs. {0:N2}}" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <TextBlock Text="{Binding CantidadVentasHoy, StringFormat={}{0} operaciones}" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Width="1" Height="66" Background="{StaticResource Line}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="20,0,18,0">
+                                    <TextBlock Text="Inventario" Foreground="{StaticResource Muted}"/>
+                                    <TextBlock Text="{Binding ValorInventario, StringFormat=Bs. {0:N2}}" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <TextBlock Text="Valor valorizado" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                </StackPanel>
+                                <Border Grid.Column="2" Width="1" Height="66" Background="{StaticResource Line}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="20,0,18,0">
+                                    <TextBlock Text="Productos" Foreground="{StaticResource Muted}"/>
+                                    <TextBlock Text="{Binding ProductosActivos}" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <TextBlock Text="Activos" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                </StackPanel>
+                                <Border Grid.Column="3" Width="1" Height="66" Background="{StaticResource Line}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="20,0,0,0">
+                                    <TextBlock Text="Stock bajo" Foreground="{StaticResource Muted}"/>
+                                    <TextBlock Text="{Binding ProductosStockBajo}" FontSize="24" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                                    <TextBlock Text="Requieren atenci&#x00F3;n" Foreground="{StaticResource Muted}" FontSize="11"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid Height="330">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="1.25*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="White" Margin="0,0,14,0" Padding="18">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                        <Grid Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="Ventas por d&#x00ED;a" FontSize="16" FontWeight="SemiBold"/>
+                                                <TextBlock Text="&#x00DA;ltimos 7 d&#x00ED;as" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,3,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <TextBlock Text="TOTAL DEL PER&#x00CD;ODO" Foreground="{StaticResource Muted}" FontSize="9" HorizontalAlignment="Right"/>
+                                                <TextBlock Text="{Binding VentasUltimosSieteDias, StringFormat=Bs. {0:N2}}" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid Grid.Row="1">
+                                            <lvc:CartesianChart Series="{Binding VentasChartSeries}"
+                                                                XAxes="{Binding VentasChartAxes}" YAxes="{Binding VentasChartYAxes}"/>
+                                            <Border Background="#E6FFFFFF" IsHitTestVisible="False"
+                                                    Visibility="{Binding HayVentasEnPeriodo, Converter={x:Static local:InverseBoolVisibilityConverter.Instance}}">
+                                                <TextBlock Text="A&#x00FA;n no hay ventas en este per&#x00ED;odo.&#x0a;Las ventas registradas aparecer&#x00E1;n aqu&#x00ED;."
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
+                                                           Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="12"/>
+                                            </Border>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="1" Background="White" Padding="18">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                        <Grid Margin="0,0,0,8">
+                                            <TextBlock Text="Productos con stock bajo" FontSize="16" FontWeight="SemiBold"/>
+                                            <Button HorizontalAlignment="Right" Padding="8,4" Background="Transparent" BorderThickness="0"
+                                                    Foreground="{StaticResource Muted}" FontSize="11"
+                                                    Command="{Binding NavegarCommand}" CommandParameter="Inventario" Content="Ver inventario &#x2192;"/>
+                                        </Grid>
+                                        <Grid Grid.Row="1">
+                                            <DataGrid ItemsSource="{Binding StockBajo}" RowHeight="42">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="PRODUCTO" Binding="{Binding Producto}" Width="*"/>
+                                                    <DataGridTextColumn Header="ACTUAL" Binding="{Binding Cantidad}" Width="70"/>
+                                                    <DataGridTextColumn Header="M&#x00CD;NIMO" Binding="{Binding StockMinimo}" Width="75"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                            <Border Background="White" IsHitTestVisible="False">
+                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="Todo en orden" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="No hay productos que requieran reposici&#x00F3;n."
+                                                               Foreground="{StaticResource Muted}" FontSize="11" Margin="0,5,0,0"/>
+                                                </StackPanel>
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding StockBajo.Count}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+</UserControl>

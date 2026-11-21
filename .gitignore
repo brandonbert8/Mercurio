@@ -1,4 +1,77 @@
+# Visual Studio / VS Code
 .vs/
-bin/
-obj/
+.vscode/
+*.suo
 *.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+.idea/
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+*.ilk
+*.log
+*.pdb
+*.opendb
+*.tlog
+*.lastbuildstate
+*.cache
+*.lib
+*.sbr
+*.trx
+
+# NuGet / package restore
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Test and coverage output
+TestResults/
+coverage/
+Coverage/
+*.coverage
+*.coveragexml
+*.cobertura.xml
+
+# SQLite local database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local application logs and runtime files
+logs/
+Log/
+
+# Publishing
+[Pp]ublish/
+[Pp]ublished/
+*.pubxml
+*.pubxml.user
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+~$*
+*.tmp
+*.temp
+*.bak

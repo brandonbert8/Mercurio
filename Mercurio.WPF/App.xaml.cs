@@ -1,16 +1,18 @@
-﻿using Mercurio.Infrastructure;
+using Mercurio.Infrastructure;
+using Mercurio.WPF.Services;
 using Mercurio.WPF.ViewModels;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
-using System.IO;
 using System.Windows;
 
 namespace Mercurio.WPF
 {
-    public partial class App : System.Windows.Application // Soluciona la ambigüedad
+    public partial class App : System.Windows.Application
     {
         private readonly IHost _host;
         private IServiceScope? _scope;
@@ -23,21 +25,20 @@ namespace Mercurio.WPF
 
             _host = Host.CreateDefaultBuilder()
                 .UseSerilog()
-                .ConfigureAppConfiguration((context, configurationBuilder) =>
+                .ConfigureAppConfiguration((context, builder) =>
                 {
-                    configurationBuilder.SetBasePath(AppContext.BaseDirectory);
-                    configurationBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    builder.SetBasePath(AppContext.BaseDirectory);
+                    builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                 })
                 .ConfigureServices((context, services) =>
                 {
                     string connectionString = context.Configuration.GetConnectionString("DefaultConnection")!;
                     services.AddMercurioBusinessLogic(connectionString);
-                    // Registrar capas
+
+                    // IDialogService como Singleton lazy: se inicializa la primera vez que se pide,
+                    // después de que MainWindow haya sido creada manualmente.
+                    services.AddSingleton<IDialogService, LazyDialogService>();
                     services.AddTransient<MainViewModel>();
-                    services.AddTransient<MainWindow>(provider => new MainWindow
-                    {
-                        DataContext = provider.GetRequiredService<MainViewModel>()
-                    });
                 })
                 .Build();
         }
@@ -46,23 +47,34 @@ namespace Mercurio.WPF
         {
             try
             {
-                Log.Information("Iniciando POS...");
+                LiveCharts.Configure(settings => settings.AddSkiaSharp().AddDefaultMappers().AddDefaultTheme());
+                Log.Information("Iniciando POS Mercurio...");
                 await _host.StartAsync();
 
-                // Usamos la capa de Infraestructura para inicializar SQLite
                 var connectionString = _host.Services.GetRequiredService<string>();
                 DatabaseInitializer.Initialize(connectionString);
 
                 _scope = _host.Services.CreateScope();
-                var mainWindow = _scope.ServiceProvider.GetRequiredService<MainWindow>();
-                mainWindow.Show();
+                var sp = _scope.ServiceProvider;
 
+                // Crear ViewModel (ya tiene IDialogService inyectado)
+                var vm = sp.GetRequiredService<MainViewModel>();
+
+                // Crear la ventana y pasarle el ViewModel
+                var mainWindow = new MainWindow { DataContext = vm };
+
+                // Ahora que la ventana existe, inicializar el DialogService con ella
+                var lazy = (LazyDialogService)sp.GetRequiredService<IDialogService>();
+                lazy.Initialize(mainWindow);
+
+                mainWindow.Show();
                 base.OnStartup(e);
             }
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Error crítico durante el arranque.");
-                MessageBox.Show("Ocurrió un error fatal. Revisa los logs.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Ocurrió un error fatal. Revisa los logs.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
                 Current.Shutdown();
             }
         }

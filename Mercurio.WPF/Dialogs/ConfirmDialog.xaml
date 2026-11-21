@@ -1,0 +1,72 @@
+<Window x:Class="Mercurio.WPF.ConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Confirmar"
+        Width="400" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Border CornerRadius="14" Background="White"
+            Effect="{StaticResource ShadowElevated}">
+        <StackPanel Margin="28">
+            <!-- Icono -->
+            <Border Width="48" Height="48" CornerRadius="24"
+                    Background="#FEF3C7" HorizontalAlignment="Left" Margin="0,0,0,16">
+                <TextBlock Text="?" FontSize="22" FontWeight="Bold"
+                           Foreground="#D97706"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <TextBlock x:Name="TxtTitulo" FontSize="17" FontWeight="SemiBold"
+                       Foreground="#17181C" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <TextBlock x:Name="TxtMensaje" FontSize="13" Foreground="#747784"
+                       TextWrapping="Wrap" Margin="0,0,0,24" LineHeight="20"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancelar" Height="42"
+                        Background="#F1F2F5" Foreground="#17181C" BorderThickness="0"
+                        FontSize="13" Cursor="Hand"
+                        Click="Cancelar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#E5E6EA"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Grid.Column="2" Content="Confirmar" Height="42"
+                        Background="#17181C" Foreground="White" BorderThickness="0"
+                        FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                        Click="Confirmar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#30323A"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

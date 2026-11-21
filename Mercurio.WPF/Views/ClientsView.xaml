@@ -1,0 +1,47 @@
+<UserControl x:Class="Mercurio.WPF.Views.ClientsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,18">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Personas que compran en tu negocio" FontSize="13" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResumenClientes}"
+                           Foreground="{StaticResource Muted}" FontSize="11" Margin="0,3,0,0"/>
+            </StackPanel>
+            <Button Style="{StaticResource Primary}" Width="152" HorizontalAlignment="Right"
+                    Command="{Binding AbrirNuevoClienteCommand}" Content="+  Nuevo cliente"/>
+        </Grid>
+        <Grid Grid.Row="1">
+            <DataGrid ItemsSource="{Binding Clientes}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="CLIENTE" Binding="{Binding Nombre}" Width="*" MinWidth="180"/>
+                    <DataGridTextColumn Header="DOCUMENTO" Binding="{Binding NumeroDocumento}" Width="160"/>
+                    <DataGridTextColumn Header="TEL&#x00C9;FONO" Binding="{Binding Telefono}" Width="150"/>
+                    <DataGridTextColumn Header="L&#x00CD;MITE DE CR&#x00C9;DITO" Binding="{Binding LimiteCredito, StringFormat=Bs. {0:N2}}" Width="190"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Border Background="White" IsHitTestVisible="False">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="A&#x00FA;n no hay clientes" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Registra un cliente con el bot&#x00F3;n superior para asociarlo a ventas y cr&#x00E9;ditos."
+                               Foreground="{StaticResource Muted}" FontSize="12" TextAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="360" Margin="0,6,0,0"/>
+                </StackPanel>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Clientes.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

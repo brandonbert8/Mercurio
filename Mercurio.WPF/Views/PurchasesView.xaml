@@ -1,0 +1,80 @@
+<UserControl x:Class="Mercurio.WPF.Views.PurchasesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Mercurio.WPF">
+    <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="380"/></Grid.ColumnDefinitions>
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="46"/><RowDefinition Height="*"/><RowDefinition Height="190"/></Grid.RowDefinitions>
+                                <Grid>
+                                    <TextBlock Text="Buscar productos para comprar" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding BusquedaCompra, UpdateSourceTrigger=PropertyChanged}" Width="270" HorizontalAlignment="Right">
+                                        <TextBox.InputBindings><KeyBinding Key="Enter" Command="{Binding BuscarCompraCommand}"/></TextBox.InputBindings>
+                                    </TextBox>
+                                </Grid>
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding ProductosCompra}" Margin="0,8,0,10">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="PRODUCTO" Binding="{Binding Nombre}" Width="*"/>
+                                        <DataGridTextColumn Header="COSTO ACTUAL" Binding="{Binding PrecioCompra, StringFormat=Bs. {0:N2}}" Width="130"/>
+                                        <DataGridTemplateColumn Header="" Width="90"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                            <Button Content="Agregar" Width="72" Height="30" Background="#17181C" Foreground="White" BorderThickness="0"
+                                                    Command="{Binding DataContext.AgregarProductoCompraCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding Id}"/>
+                                        </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <DataGrid Grid.Row="2" ItemsSource="{Binding Compras}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="DOCUMENTO" Binding="{Binding NumeroDocumento}" Width="*"/>
+                                        <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat={}{0:dd/MM/yyyy}}" Width="120"/>
+                                        <DataGridTextColumn Header="TOTAL" Binding="{Binding Total, StringFormat=Bs. {0:N2}}" Width="120"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                            <Border Grid.Column="1" Margin="16,0,0,0" Background="White" CornerRadius="10" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Nueva compra" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Proveedor" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,4"/>
+                                    <ComboBox Height="38" ItemsSource="{Binding Proveedores}" SelectedItem="{Binding ProveedorCompra}" DisplayMemberPath="Nombre" Margin="0,0,0,10"/>
+                                    <Button Style="{StaticResource Primary}" Height="36" Margin="0,0,0,10"
+                                            Command="{Binding AbrirNuevoProveedorCommand}" Content="Nuevo proveedor"/>
+
+                                    <DataGrid ItemsSource="{Binding CarritoCompra}" Height="245">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="PRODUCTO" Binding="{Binding Nombre}" Width="*"/>
+                                            <DataGridTemplateColumn Header="CANT." Width="62"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                <TextBox Text="{Binding Cantidad, UpdateSourceTrigger=PropertyChanged}" Height="32" Padding="4"/>
+                                            </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                            <DataGridTemplateColumn Header="COSTO" Width="86"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                <TextBox Text="{Binding CostoUnitario, UpdateSourceTrigger=PropertyChanged}" Height="32" Padding="4"/>
+                                            </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="TOTAL" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="70"/>
+                                            <DataGridTemplateColumn Width="32"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                                <Button Content="×" Background="Transparent" BorderThickness="0"
+                                                        Command="{Binding DataContext.QuitarProductoCompraCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock Text="Forma de pago" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,4"/>
+                                    <ComboBox Height="36" ItemsSource="{Binding MetodosPago}" SelectedItem="{Binding MetodoPagoCompra}" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Pagado ahora (Bs.)" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,4"
+                                               Visibility="{Binding CompraAlCredito, Converter={x:Static local:InverseBoolVisibilityConverter.Instance}}"/>
+                                    <TextBox Text="{Binding MontoPagadoCompra, UpdateSourceTrigger=PropertyChanged}" Height="36" Margin="0,0,0,6"
+                                             IsEnabled="{Binding PuedeEditarPagoCompra}"/>
+                                    <TextBlock Text="La compra quedar&#x00E1; pendiente de pago al proveedor."
+                                               Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                                               Visibility="{Binding CompraAlCredito, Converter={x:Static local:BoolVisibilityConverter.Instance}}"/>
+                                    <Grid Margin="0,0,0,10" Visibility="{Binding CompraPagoNecesitaCaja, Converter={x:Static local:BoolVisibilityConverter.Instance}}">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="Abre Caja para registrar este pago en efectivo." Foreground="#92400E"
+                                                   FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Foreground="#92400E"
+                                                Padding="6,4" Command="{Binding NavegarCommand}" CommandParameter="Caja" Content="Ir a Caja →"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,12"><TextBlock Text="Total de compra" FontWeight="SemiBold"/><TextBlock Text="{Binding TotalCompra, StringFormat=Bs. {0:N2}}" HorizontalAlignment="Right" FontSize="17" FontWeight="SemiBold"/></Grid>
+                                    <Button Style="{StaticResource Primary}" Command="{Binding RegistrarCompraRapidaCommand}" Content="Registrar compra"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+</UserControl>

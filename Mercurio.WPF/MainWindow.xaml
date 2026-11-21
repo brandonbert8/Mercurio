@@ -1,51 +1,99 @@
-﻿<Window Background="#0A0A0A" 
-        Foreground="#EDEDED" 
-        Height="450" 
-        Title="Mercurio POS" 
-        Width="800" 
-        x:Class="Mercurio.WPF.MainWindow" 
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Window x:Class="Mercurio.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Mercurio.WPF"
+        xmlns:views="clr-namespace:Mercurio.WPF.Views"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Mercurio" Width="1280" Height="820"        MinWidth="1024" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowsTransparency="False"
+        Background="#F6F7F9" Foreground="#17181C"
+        Loaded="Window_Loaded" StateChanged="Window_StateChanged">
 
-    <!-- El DataContext se inyecta desde App.xaml.cs -->
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="8"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,20" Orientation="Horizontal">
-            <TextBox Background="#1A1A1A" BorderBrush="#333" Foreground="White" Margin="0,0,10,0" Padding="5" Text="{Binding NuevoNombre, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+    <Window.InputBindings>
+        <KeyBinding Key="F12" Command="{Binding RegistrarVentaRapidaCommand}"/>
+        <KeyBinding Key="F9" Command="{Binding AbrirCajaRapidaCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding LimpiarCarritoCommand}"/>
+    </Window.InputBindings>
 
-            <TextBox Background="#1A1A1A" BorderBrush="#333" Foreground="White" Margin="0,0,10,0" Padding="5" Text="{Binding NuevoPrecio, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="40"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid Grid.Row="0" Background="White">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                <Border Width="28" Height="28" CornerRadius="8" Background="#17181C">
+                    <TextBlock Text="M" Foreground="White" FontSize="15" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Mercurio" Margin="10,0,0,0" VerticalAlignment="Center"
+                           FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
+                <TextBlock Text="{Binding NombreNegocio}" Margin="8,0,0,0" VerticalAlignment="Center"
+                           FontSize="11" Foreground="{StaticResource Muted}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Style="{StaticResource WindowCaptionButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Click="MinimizeWindow" ToolTip="Minimizar">
+                    <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                </Button>
+                <Button Style="{StaticResource WindowCaptionButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Click="ToggleMaximizeWindow" ToolTip="Maximizar o restaurar">
+                    <TextBlock x:Name="MaximizeWindowGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                </Button>
+                <Button Style="{StaticResource WindowCloseButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                        Click="CloseWindow" ToolTip="Cerrar">
+                    <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+        <materialDesign:DialogHost Grid.Row="1" Identifier="MercurioDialogHost"
+                                    CloseOnClickAway="False" OverlayBackground="#66000000"
+                                    DialogTheme="Inherit" DialogContentUniformCornerRadius="12">
+            <Grid>
 
-            <Button Background="#0070F3" BorderThickness="0" Command="{Binding GuardarProductoCommand}" Content="Agregar" Foreground="White" Padding="5" Width="100"/>
+        <ui:SnackbarPresenter x:Name="SnackbarPresenter" Grid.Row="1"
+                              VerticalAlignment="Top" HorizontalAlignment="Right"
+                              Margin="0,12,12,0" Panel.ZIndex="1001"/>
 
-            <Button Background="#333" BorderThickness="0" Command="{Binding CargarProductosCommand}" Content="Refrescar" Foreground="White" Margin="10,0,0,0" Padding="5" Width="100"/>
-        </StackPanel>
+        <!-- Auth -->
+        <views:LoginView Panel.ZIndex="100" Visibility="{Binding IsAuthenticated, Converter={x:Static local:InverseBoolVisibilityConverter.Instance}}"/>
 
-        <!-- Se cambió Foreground a White y se mejoraron los bordes de la grilla -->
-        <DataGrid AutoGenerateColumns="True" 
-                  Background="#111111" 
-                  Foreground="White" 
-                  Grid.Row="1" 
-                  HeadersVisibility="Column" 
-                  ItemsSource="{Binding Productos}" 
-                  RowBackground="#1A1A1A"
-                  BorderBrush="#333"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#222">
+        <!-- Main app -->
+        <Grid Visibility="{Binding IsAuthenticated, Converter={x:Static local:BoolVisibilityConverter.Instance}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="232"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Estilo para asegurar que las cabeceras de las columnas coincidan con el tema oscuro -->
-            <DataGrid.ColumnHeaderStyle>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#1A1A1A"/>
-                    <Setter Property="Foreground" Value="#888888"/>
-                    <Setter Property="Padding" Value="10,5"/>
-                    <Setter Property="BorderBrush" Value="#333"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                </Style>
-            </DataGrid.ColumnHeaderStyle>
-        </DataGrid>
+            <views:NavigationSidebar x:Name="NavigationSidebar"/>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Background="#F6F7F9" ClipToBounds="True">
+                    <views:DashboardView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Resumen}"/>
+                    <views:SalesView Margin="20" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Ventas}"/>
+                    <views:CashView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Caja}"/>
+                    <views:PurchasesView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Compras}"/>
+                    <views:InventoryView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Inventario}"/>
+                    <views:ClientsView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Clientes}"/>
+                    <views:SuppliersView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Proveedores}"/>
+                    <views:CreditsView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Creditos}"/>
+                    <views:ReportsView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Reportes}"/>
+                    <views:ConfigurationView Margin="24" Visibility="{Binding PaginaActual, Converter={x:Static local:PaginaVisibilityConverter.Instance}, ConverterParameter=Configuracion}"/>
+                </Grid>
+            </Grid>
+        </Grid>
+        </Grid>
+        </materialDesign:DialogHost>
     </Grid>
 </Window>

@@ -1,0 +1,47 @@
+<UserControl x:Class="Mercurio.WPF.Views.CashView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Mercurio.WPF">
+    <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Background="White" CornerRadius="10" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="Control de caja" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,6"/>
+
+                                    <!-- Indicador de estado de caja -->
+                                    <Border x:Name="EstadoCajaBadge" CornerRadius="6" Padding="10,6" Margin="0,0,0,16">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center"
+                                                     Fill="{Binding CajaEstaAbierta, Converter={x:Static local:CajaBadgeColorConverter.Instance}}"/>
+                                            <TextBlock Text="{Binding EstadoCajaTexto}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{Binding CajaEstaAbierta, Converter={x:Static local:CajaBadgeColorConverter.Instance}}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Abrir caja -->
+                                    <StackPanel Visibility="{Binding CajaEstaAbierta, Converter={x:Static local:InverseBoolVisibilityConverter.Instance}}">
+                                        <TextBlock Text="Fondo inicial (Bs.)" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding MontoCajaInicial, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+                                        <Button Style="{StaticResource Primary}" Command="{Binding AbrirCajaRapidaCommand}" Content="🔓  Abrir caja"/>
+                                    </StackPanel>
+
+                                    <!-- Cerrar caja -->
+                                    <StackPanel Visibility="{Binding CajaEstaAbierta, Converter={x:Static local:BoolVisibilityConverter.Instance}}">
+                                        <TextBlock Text="Monto contado en caja (Bs.)" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding MontoCajaDeclarado, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+                                        <Button Style="{StaticResource Primary}" Command="{Binding CerrarCajaRapidaCommand}"
+                                                Background="#DC2626" Content="🔒  Cerrar caja"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <DataGrid Grid.Column="1" Margin="16,0,0,0" ItemsSource="{Binding SesionesCaja}" Height="520">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="APERTURA" Binding="{Binding FechaApertura, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="170"/>
+                                    <DataGridTextColumn Header="CIERRE" Binding="{Binding FechaCierre, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="170"/>
+                                    <DataGridTextColumn Header="INICIAL" Binding="{Binding MontoInicial, StringFormat=Bs. {0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="DIFERENCIA" Binding="{Binding Diferencia, StringFormat=Bs. {0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+</UserControl>

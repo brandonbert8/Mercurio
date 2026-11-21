@@ -1,0 +1,48 @@
+<UserControl x:Class="Mercurio.WPF.Views.SuppliersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,18">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Contactos que abastecen tu negocio" FontSize="13" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding ResumenProveedores}"
+                           Foreground="{StaticResource Muted}" FontSize="11" Margin="0,3,0,0"/>
+            </StackPanel>
+            <Button Style="{StaticResource Primary}" Width="164" HorizontalAlignment="Right"
+                    Command="{Binding AbrirNuevoProveedorCommand}" Content="+  Nuevo proveedor"/>
+        </Grid>
+        <Grid Grid.Row="1">
+            <DataGrid ItemsSource="{Binding Proveedores}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="PROVEEDOR" Binding="{Binding Nombre}" Width="*" MinWidth="180"/>
+                    <DataGridTextColumn Header="CONTACTO" Binding="{Binding Contacto}" Width="180"/>
+                    <DataGridTextColumn Header="TEL&#x00C9;FONO" Binding="{Binding Telefono}" Width="150"/>
+                    <DataGridTextColumn Header="RUC / NIT" Binding="{Binding Ruc}" Width="140"/>
+                    <DataGridTextColumn Header="CORREO" Binding="{Binding Email}" Width="220"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Border Background="White" IsHitTestVisible="False">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="A&#x00FA;n no hay proveedores" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Agrega a tus proveedores para seleccionarlos al registrar una compra."
+                               Foreground="{StaticResource Muted}" FontSize="12" TextAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="360" Margin="0,6,0,0"/>
+                </StackPanel>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Proveedores.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

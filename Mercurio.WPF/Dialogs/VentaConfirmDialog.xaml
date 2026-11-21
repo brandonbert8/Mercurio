@@ -1,0 +1,128 @@
+<Window x:Class="Mercurio.WPF.VentaConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Confirmar venta"
+        Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+
+    <Border CornerRadius="14" Background="White"
+            Effect="{StaticResource ShadowElevated}">
+        <StackPanel Margin="28">
+
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                <Border Width="40" Height="40" CornerRadius="20" Background="#ECFDF5">
+                    <TextBlock Text="✓" FontSize="18" FontWeight="Bold"
+                               Foreground="#16A34A"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Confirmar venta" FontSize="17" FontWeight="SemiBold" Foreground="#17181C"/>
+                    <TextBlock x:Name="TxtCliente" FontSize="12" Foreground="#747784"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Items -->
+            <Border Background="#F8F9FA" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="PRODUCTO" FontSize="10" FontWeight="SemiBold" Foreground="#A3A6AF"/>
+                        <TextBlock Text="CANT." FontSize="10" FontWeight="SemiBold" Foreground="#A3A6AF" HorizontalAlignment="Center"/>
+                        <TextBlock Text="TOTAL" FontSize="10" FontWeight="SemiBold" Foreground="#A3A6AF" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ItemsControl x:Name="ItemsLista">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding Nombre}" FontSize="13" Foreground="#17181C"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="220"/>
+                                    <TextBlock Text="{Binding Cantidad}" FontSize="13" Foreground="#17181C"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Total, StringFormat=Bs. {0:N2}}" FontSize="13"
+                                               Foreground="#17181C" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Totales -->
+            <Border BorderBrush="#E7E8EC" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,0,0,20">
+                <StackPanel>
+                    <Grid x:Name="FilaDescuento" Margin="0,0,0,4" Visibility="Collapsed">
+                        <TextBlock Text="Descuento" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtDescuento" FontSize="13" Foreground="#16A34A" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="Método de pago" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtMetodo" FontSize="13" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid x:Name="FilaMontoPagado" Margin="0,0,0,4" Visibility="Collapsed">
+                        <TextBlock Text="Monto recibido" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtMontoPagado" FontSize="13" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,8,0,0">
+                        <TextBlock Text="TOTAL" FontSize="16" FontWeight="Bold" Foreground="#17181C"/>
+                        <TextBlock x:Name="TxtTotal" FontSize="20" FontWeight="Bold" Foreground="#17181C" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid x:Name="FilaVuelto" Margin="0,4,0,0" Visibility="Collapsed">
+                        <TextBlock Text="Vuelto" FontSize="13" Foreground="#747784"/>
+                        <TextBlock x:Name="TxtVuelto" FontSize="16" FontWeight="SemiBold" Foreground="#16A34A" HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Botones -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancelar" Height="44"
+                        Background="#F1F2F5" Foreground="#17181C" BorderThickness="0"
+                        FontSize="13" Cursor="Hand" Click="Cancelar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#E5E6EA"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Grid.Column="2" Height="44"
+                        Background="#16A34A" Foreground="White" BorderThickness="0"
+                        FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                        Click="Confirmar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Root" Property="Background" Value="#15803D"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✓  " FontSize="14"/>
+                        <TextBlock Text="Cobrar y registrar" FontSize="13" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
